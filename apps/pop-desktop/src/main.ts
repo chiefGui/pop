@@ -1,13 +1,21 @@
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
-import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { channels } from "@pop/contracts/ipc";
 import { createAppRuntime, readGreeting } from "./database";
+import {
+  acquireDataLock,
+  databaseName,
+  dataDirectory,
+  prepareDataDirectory,
+} from "./local-data.mts";
+import { createPreferences } from "./preferences";
 
 let runtime: ReturnType<typeof createAppRuntime> | undefined;
 let quitting = false;
-if (process.env.POP_USER_DATA_DIR) app.setPath("userData", process.env.POP_USER_DATA_DIR);
+let releaseDataLock: (() => void) | undefined;
+let preferences: ReturnType<typeof createPreferences>;
+const directory = dataDirectory();
 const rendererFile = path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`);
 const rendererUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL ?? pathToFileURL(rendererFile).href;
 
@@ -24,8 +32,7 @@ function isAppUrl(url: string) {
 async function createWindow() {
   const window = new BrowserWindow({
     title: "Pop",
-    width: 1000,
-    height: 760,
+    ...preferences.get("windowSize"),
     minWidth: 440,
     minHeight: 580,
     backgroundColor: "#f5f5f2",
@@ -47,6 +54,10 @@ async function createWindow() {
   );
   window.webContents.session.setPermissionCheckHandler(() => false);
   window.once("ready-to-show", () => window.show());
+  window.on("close", () => {
+    const { width, height } = window.getNormalBounds();
+    preferences.set("windowSize", { width, height });
+  });
   await window.loadURL(rendererUrl);
 }
 
@@ -62,12 +73,19 @@ app.on("before-quit", (event) => {
     .catch(console.error)
     .finally(() => app.quit());
 });
+app.on("quit", () => releaseDataLock?.());
 
-void app
-  .whenReady()
+void Promise.resolve()
+  .then(() => {
+    prepareDataDirectory(directory);
+    releaseDataLock = acquireDataLock(directory);
+    app.setPath("userData", directory);
+    app.setPath("sessionData", directory);
+    return app.whenReady();
+  })
   .then(async () => {
-    await mkdir(app.getPath("userData"), { recursive: true });
-    runtime = createAppRuntime(path.join(app.getPath("userData"), "pop.sqlite"));
+    preferences = createPreferences(directory);
+    runtime = createAppRuntime(path.join(directory, databaseName));
     await runtime.runPromise(readGreeting);
     ipcMain.handle(channels.greeting, (event) => {
       if (
@@ -88,9 +106,8 @@ void app
 
 function failStartup(error: unknown) {
   console.error(error);
-  dialog.showErrorBox(
-    "Pop could not start",
-    error instanceof Error ? error.message : String(error),
-  );
+  let message = String(error);
+  if (error instanceof Error) message = error.message;
+  dialog.showErrorBox("Pop could not start", message);
   app.quit();
 }

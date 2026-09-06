@@ -17,8 +17,11 @@
     "@electron-forge/maker-zip": "7.11.2",
     "@electron-forge/plugin-vite": "7.11.2",
     "@pop/contracts": "workspace:*",
+    "@types/proper-lockfile": "4.1.4",
     "effect": "4.0.0-rc.112",
     "electron": "44.2.0",
+    "electron-store": "11.0.2",
+    "proper-lockfile": "4.1.2",
     "vite": "npm:@voidzero-dev/vite-plus-core@0.3.0",
     "vite-plus": "0.3.0"
   },
