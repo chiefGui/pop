@@ -1,0 +1,13 @@
+{
+  "name": "@pop/contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./ipc": "./src/ipc.ts"
+  },
+  "dependencies": {
+    "effect": "4.0.0-rc.112"
+  }
+}

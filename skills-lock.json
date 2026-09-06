@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "implement": {
+      "source": "chiefGui/skills",
+      "sourceType": "github",
+      "skillPath": "skills/implement/SKILL.md",
+      "computedHash": "eb27a00c7f89c098992125caad3a092618ce1f9999ce3a92dc96533a10ab5414"
+    },
+    "polish": {
+      "source": "chiefGui/skills",
+      "sourceType": "github",
+      "skillPath": "skills/polish/SKILL.md",
+      "computedHash": "6dfe20d2a837b0df68dcf2ecd187e13abe5865eb56493eefbd54f4a7e3b20998"
+    }
+  }
+}

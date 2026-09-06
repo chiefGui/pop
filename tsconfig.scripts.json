@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "erasableSyntaxOnly": true,
+    "types": ["node"]
+  },
+  "include": ["scripts/**/*.ts", "apps/pop-web/src/env.d.ts"]
+}
