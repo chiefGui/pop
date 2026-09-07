@@ -1,1 +1,1 @@
-export { GameScreen as Home } from "../features/game/game-screen";
+export { GameScreen as Home } from "../game/game-screen";
