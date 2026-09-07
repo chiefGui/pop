@@ -1,0 +1,1 @@
+export { gameContent } from "./content";

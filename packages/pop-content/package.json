@@ -1,0 +1,15 @@
+{
+  "name": "@pop/content",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@pop/simulation": "workspace:*"
+  },
+  "devDependencies": {
+    "effect": "4.0.0-rc.112"
+  }
+}
