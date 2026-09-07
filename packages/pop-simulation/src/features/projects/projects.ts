@@ -36,6 +36,13 @@ interface Commitment {
 
 const HISTORY_LIMIT = 40;
 
+function meetsRequirements(character: Character, definition: ProjectDefinition) {
+  return (
+    character.reputation >= definition.requirements.reputation &&
+    character.popularity >= definition.requirements.popularity
+  );
+}
+
 export function createProjects(state: WorldState, authored: readonly ProjectDefinition[]) {
   const world = state.ecs;
   const definitions = new Map(authored.map((definition) => [definition.id, definition]));
@@ -123,10 +130,7 @@ export function createProjects(state: WorldState, authored: readonly ProjectDefi
           reason: "DefinitionMissing",
           message: "Project type not found.",
         });
-      if (
-        character.reputation < definition.requirements.reputation ||
-        character.popularity < definition.requirements.popularity
-      ) {
+      if (!meetsRequirements(character, definition)) {
         return new ActionRejected({
           reason: "RequirementsUnmet",
           message: "You do not yet meet this project's reputation and popularity requirements.",
@@ -179,8 +183,7 @@ export function createProjects(state: WorldState, authored: readonly ProjectDefi
       (character) =>
         character.id !== playerId &&
         available(character) > 0 &&
-        character.reputation >= definition.requirements.reputation &&
-        character.popularity >= definition.requirements.popularity,
+        meetsRequirements(character, definition),
     );
     return eligible.map((character) => character.id);
   }

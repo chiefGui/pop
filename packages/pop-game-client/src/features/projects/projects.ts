@@ -9,19 +9,15 @@ export function createProjectsClient(
   session: ProjectSession,
   definitions: readonly ProjectDefinition[],
 ) {
-  let observed: WorldView | null = null;
-  let board: ProjectBoard | undefined;
+  const views = new WeakMap<WorldView, ProjectBoard>();
   return {
-    clearView() {
-      observed = null;
-      board = undefined;
-    },
     getView() {
       const world = session.getSnapshot().world;
-      if (world !== observed) {
-        observed = world;
-        board = undefined;
-        if (world) board = projectBoard(world, definitions);
+      if (!world) return;
+      let board = views.get(world);
+      if (!board) {
+        board = projectBoard(world, definitions);
+        views.set(world, board);
       }
       return board;
     },

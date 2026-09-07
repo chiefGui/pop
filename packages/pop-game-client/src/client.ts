@@ -4,16 +4,12 @@ import { createProjectsClient, resolutionFeedback } from "./features/projects/pr
 
 export function createGameClient(content: GameContent, seed: number) {
   const session = createSession(content, seed);
-  const { clearView, ...projects } = createProjectsClient(session, content.projects);
   return {
     start: session.start,
-    dispose() {
-      session.dispose();
-      clearView();
-    },
+    dispose: session.dispose,
     getSnapshot: session.getSnapshot,
     subscribe: session.subscribe,
-    projects,
+    projects: createProjectsClient(session, content.projects),
     advanceDay() {
       session.execute({ type: "advance-day" }, resolutionFeedback);
     },
