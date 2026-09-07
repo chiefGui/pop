@@ -7,7 +7,6 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { Home } from "./routes/home";
-import { Stack } from "./routes/stack";
 
 function Layout() {
   return <Outlet />;
@@ -15,14 +14,9 @@ function Layout() {
 
 const rootRoute = createRootRoute({ component: Layout });
 const homeRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: Home });
-const stackRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/stack",
-  component: Stack,
-});
 
 export const router = createRouter({
-  routeTree: rootRoute.addChildren([homeRoute, stackRoute]),
+  routeTree: rootRoute.addChildren([homeRoute]),
   history: createHashHistory(),
   defaultNotFoundComponent: () => (
     <p>

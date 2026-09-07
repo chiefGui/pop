@@ -65,22 +65,12 @@ try {
       );
       await page.getByRole("button", { name: "Refresh greeting" }).click();
       await page.getByRole("button", { name: "Refresh greeting" }).waitFor();
-      await page.getByRole("link", { name: "Stack", exact: true }).click();
-      await page.getByRole("heading", { name: "Ready to build." }).waitFor();
-      await page.getByRole("region", { name: "Technology stack" }).evaluate((el) => {
-        el.scrollTop = el.scrollHeight;
-      });
-      await page.getByText("TypeScript", { exact: true }).waitFor();
-      await page.reload();
-      await page.getByRole("heading", { name: "Ready to build." }).waitFor();
-      await page.getByRole("link", { name: "Home", exact: true }).click();
-      await page.getByText("Saved desktop launches", { exact: true }).waitFor();
       if (visits === 1) {
         await mkdir(path.join(root, ".cache"), { recursive: true });
         await page.screenshot({ path: path.join(root, ".cache/desktop-smoke.png") });
       }
       console.log(
-        `${mode} app: launch ${visits}, SQLite ${greeting.sqliteVersion}, IPC, styles, navigation and virtual list passed.`,
+        `${mode} app: launch ${visits}, SQLite ${greeting.sqliteVersion}, IPC and styles passed.`,
       );
     } finally {
       await app.close();
