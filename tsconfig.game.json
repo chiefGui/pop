@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "packages/pop-simulation/**/*.ts",
+    "packages/pop-content/**/*.ts",
+    "packages/pop-game-client/**/*.ts",
+    "apps/pop-web/src/**/*.ts",
+    "apps/pop-web/src/**/*.tsx",
+    "apps/pop-web/vite.config.ts",
+    "apps/pop-web/benchmarks/**/*.ts",
+    "scripts/benchmark.ts"
+  ]
+}

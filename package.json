@@ -20,7 +20,10 @@
     "check": "vp check && bun run typecheck",
     "format": "vp fmt",
     "test": "vp test run",
-    "test:smoke": "node scripts/smoke.ts"
+    "test:smoke": "node scripts/smoke.ts",
+    "test:game": "vp test run packages/pop-simulation packages/pop-game-client apps/pop-web/src/game",
+    "typecheck:game": "tsc --project tsconfig.game.json",
+    "benchmark": "bun scripts/benchmark.ts"
   },
   "devDependencies": {
     "@types/node": "26.4.1",

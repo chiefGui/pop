@@ -1,0 +1,14 @@
+{
+  "name": "@pop/simulation",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./contracts": "./src/contracts.ts"
+  },
+  "dependencies": {
+    "bitecs": "0.4.0",
+    "effect": "4.0.0-rc.112"
+  }
+}
