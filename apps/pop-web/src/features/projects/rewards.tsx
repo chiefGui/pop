@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import type { ProjectDefinition, Rewards } from "@pop/simulation";
 import { Table, TableHeading, TableCell } from "../../ui/table";
-import { colors } from "../../ui/theme.stylex";
+import { colors, fontSizes, fontWeights, breakpoints } from "../../ui/tokens.stylex";
 
 export function rewardText(reward: Rewards) {
   const parts: string[] = [];
@@ -53,13 +53,21 @@ export function RewardTable({ definition }: { definition: ProjectDefinition }) {
 
 const styles = stylex.create({
   scroll: { overflowX: "auto" },
-  caption: { textAlign: "left", fontSize: 12, fontWeight: 600, padding: "14px 0 12px" },
-  head: { color: colors.muted },
+  caption: {
+    textAlign: "left",
+    fontSize: fontSizes.md,
+    fontWeight: fontWeights.semibold,
+    paddingTop: "14px",
+    paddingRight: "0",
+    paddingBottom: "12px",
+    paddingLeft: "0",
+  },
+  head: { color: colors.textMuted },
   role: { width: "24%" },
   reward: {
-    color: "#52644f",
+    color: colors.textPositive,
     width: "38%",
     lineHeight: 1.7,
-    fontSize: { default: 11, "@media (max-width: 680px)": 10 },
+    fontSize: { default: fontSizes.sm, [breakpoints.upToCompact]: fontSizes.xs },
   },
 });

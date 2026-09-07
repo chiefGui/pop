@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import type { GameClient } from "@pop/game-client";
 import type { ProjectDefinition } from "@pop/simulation";
 import { Button } from "../../ui/button";
-import { colors } from "../../ui/theme.stylex";
+import { colors, fontSizes, fontWeights, breakpoints } from "../../ui/tokens.stylex";
 
 export function ProjectOpportunity({
   client,
@@ -45,7 +45,7 @@ export function ProjectOpportunity({
 const styles = stylex.create({
   opportunity: {
     display: "flex",
-    alignItems: { default: "center", "@media (max-width: 680px)": "flex-start" },
+    alignItems: { default: "center", [breakpoints.upToCompact]: "flex-start" },
     justifyContent: "space-between",
     gap: 20,
     paddingTop: 22,
@@ -53,17 +53,20 @@ const styles = stylex.create({
   copy: {
     display: "flex",
     alignItems: "center",
-    gap: { default: 14, "@media (max-width: 680px)": 8 },
+    gap: { default: 14, [breakpoints.upToCompact]: 8 },
   },
-  mark: { fontSize: 24, color: colors.green },
-  heading: { fontSize: 13, fontWeight: 600 },
+  mark: { fontSize: 24, color: colors.textAccent },
+  heading: { fontSize: fontSizes.lg, fontWeight: fontWeights.semibold },
   description: {
-    margin: "2px 0 0",
-    color: colors.muted,
-    fontSize: { default: 12, "@media (max-width: 680px)": 11 },
+    marginTop: "2px",
+    marginRight: "0",
+    marginBottom: "0",
+    marginLeft: "0",
+    color: colors.textMuted,
+    fontSize: { default: fontSizes.md, [breakpoints.upToCompact]: fontSizes.sm },
   },
   action: {
-    fontSize: 12,
-    padding: { default: "11px 18px", "@media (max-width: 680px)": "9px 11px" },
+    fontSize: fontSizes.md,
+    padding: { default: "11px 18px", [breakpoints.upToCompact]: "9px 11px" },
   },
 });

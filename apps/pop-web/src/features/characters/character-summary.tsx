@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import type { CharacterView } from "@pop/simulation";
 import { typography } from "../../ui/typography";
-import { colors } from "../../ui/theme.stylex";
+import { colors, fonts, fontSizes, fontWeights, radii, breakpoints } from "../../ui/tokens.stylex";
 
 export function CharacterSummary({ character }: { character: CharacterView }) {
   return (
@@ -39,50 +39,54 @@ const styles = stylex.create({
     display: "grid",
     gridTemplateColumns: {
       default: "1.6fr 1fr 1fr 1.1fr",
-      "@media (max-width: 900px)": "1.4fr 1fr 1fr 1.1fr",
-      "@media (max-width: 680px)": "repeat(3, 1fr)",
+      [breakpoints.upToMedium]: "1.4fr 1fr 1fr 1.1fr",
+      [breakpoints.upToCompact]: "repeat(3, 1fr)",
     },
-    backgroundColor: colors.paper,
-    border: `1px solid ${colors.line}`,
-    borderRadius: 8,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderStyle: "solid",
+    borderColor: colors.border,
+    borderRadius: radii.lg,
     padding: {
       default: "22px 24px",
-      "@media (max-width: 900px)": 18,
-      "@media (max-width: 680px)": 16,
+      [breakpoints.upToMedium]: 18,
+      [breakpoints.upToCompact]: 16,
     },
-    gap: { default: 20, "@media (max-width: 900px)": 14, "@media (max-width: 680px)": "18px 10px" },
+    gap: { default: 20, [breakpoints.upToMedium]: 14, [breakpoints.upToCompact]: "18px 10px" },
   },
   identity: {
     display: "flex",
     alignItems: "center",
     minWidth: 0,
-    gap: { default: 14, "@media (max-width: 900px)": 9 },
-    gridColumn: { default: "auto", "@media (max-width: 680px)": "1 / -1" },
+    gap: { default: 14, [breakpoints.upToMedium]: 9 },
+    gridColumn: { default: "auto", [breakpoints.upToCompact]: "1 / -1" },
   },
   name: { minWidth: 0 },
-  nameText: { display: "block", fontSize: 16, overflowWrap: "anywhere", marginTop: 4 },
+  nameText: { display: "block", fontSize: fontSizes.xxl, overflowWrap: "anywhere", marginTop: 4 },
   avatar: {
     display: "grid",
     placeItems: "center",
     flexShrink: 0,
     width: 42,
     height: 46,
-    borderRadius: 5,
-    color: colors.green,
-    backgroundColor: "#e8edde",
+    borderRadius: radii.sm,
+    color: colors.textAccent,
+    backgroundColor: colors.surfaceAccent,
     fontSize: 22,
-    fontFamily: "Georgia, serif",
+    fontFamily: fonts.display,
   },
   resource: {
-    borderLeft: { default: `1px solid ${colors.line}`, "@media (max-width: 680px)": "none" },
-    paddingLeft: { default: 24, "@media (max-width: 900px)": 14, "@media (max-width: 680px)": 0 },
+    borderLeftWidth: { default: 1, [breakpoints.upToCompact]: 0 },
+    borderLeftStyle: "solid",
+    borderLeftColor: colors.border,
+    paddingLeft: { default: 24, [breakpoints.upToMedium]: 14, [breakpoints.upToCompact]: 0 },
   },
   label: {
     display: "block",
-    fontSize: { default: 11, "@media (max-width: 680px)": 10 },
-    color: colors.muted,
+    fontSize: { default: fontSizes.sm, [breakpoints.upToCompact]: fontSizes.xs },
+    color: colors.textMuted,
   },
-  value: { fontSize: 27, fontWeight: 550 },
-  influence: { color: colors.green },
-  total: { fontSize: 17, color: colors.muted, fontWeight: 400 },
+  value: { fontSize: 27, fontWeight: fontWeights.medium },
+  influence: { color: colors.textAccent },
+  total: { fontSize: 17, color: colors.textMuted, fontWeight: fontWeights.regular },
 });

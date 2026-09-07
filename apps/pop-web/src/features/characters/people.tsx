@@ -1,22 +1,28 @@
 import * as stylex from "@stylexjs/stylex";
 import { Table, TableHeading, TableCell } from "../../ui/table";
 import { typography } from "../../ui/typography";
-import { colors } from "../../ui/theme.stylex";
+import { colors, fontSizes, radii } from "../../ui/tokens.stylex";
 import type { WorldView } from "@pop/simulation";
 
 const styles = stylex.create({
-  panel: { padding: "30px 0" },
+  panel: { paddingBlock: "30px", paddingInline: "0" },
   heading: { marginTop: 10 },
-  description: { color: colors.muted, fontSize: 12, marginTop: 0 },
+  description: { color: colors.textMuted, fontSize: fontSizes.md, marginTop: 0 },
   scroll: { maxHeight: 650, overflow: "auto", scrollbarGutter: "stable" },
-  head: { position: "sticky", top: 0, backgroundColor: "#f5f5f2", color: colors.muted },
+  head: {
+    position: "sticky",
+    top: 0,
+    backgroundColor: colors.surfaceCanvas,
+    color: colors.textMuted,
+  },
   cell: { padding: 14 },
   you: {
-    fontSize: 10,
-    color: colors.green,
-    backgroundColor: "#e3ebdc",
-    padding: "2px 7px",
-    borderRadius: 3,
+    fontSize: fontSizes.xs,
+    color: colors.textAccent,
+    backgroundColor: colors.surfaceAccent,
+    paddingBlock: "2px",
+    paddingInline: "7px",
+    borderRadius: radii.xs,
     marginLeft: 10,
   },
 });

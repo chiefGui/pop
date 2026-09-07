@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import { Button } from "../../ui/button";
-import { colors } from "../../ui/theme.stylex";
+import { colors, fontSizes, fontWeights, breakpoints } from "../../ui/tokens.stylex";
 import { calendarDate } from "./calendar";
 
 export function TurnControl({ day, onAdvance }: { day: number; onAdvance: () => void }) {
@@ -20,17 +20,17 @@ export function TurnControl({ day, onAdvance }: { day: number; onAdvance: () => 
 const styles = stylex.create({
   control: {
     display: "flex",
-    flexDirection: { default: "row", "@media (max-width: 680px)": "column" },
-    alignItems: { default: "center", "@media (max-width: 680px)": "flex-end" },
-    gap: { default: 24, "@media (max-width: 900px)": 12, "@media (max-width: 680px)": 8 },
+    flexDirection: { default: "row", [breakpoints.upToCompact]: "column" },
+    alignItems: { default: "center", [breakpoints.upToCompact]: "flex-end" },
+    gap: { default: 24, [breakpoints.upToMedium]: 12, [breakpoints.upToCompact]: 8 },
   },
   date: {
     textAlign: "right",
-    display: { default: "block", "@media (max-width: 680px)": "flex" },
+    display: { default: "block", [breakpoints.upToCompact]: "flex" },
     gap: 8,
     alignItems: "baseline",
   },
-  label: { display: "block", fontSize: 13, fontWeight: 600 },
-  day: { display: "block", fontSize: 11, color: colors.muted },
-  advance: { minWidth: { default: 136, "@media (max-width: 680px)": 126 } },
+  label: { display: "block", fontSize: fontSizes.lg, fontWeight: fontWeights.semibold },
+  day: { display: "block", fontSize: fontSizes.sm, color: colors.textMuted },
+  advance: { minWidth: { default: 136, [breakpoints.upToCompact]: 126 } },
 });

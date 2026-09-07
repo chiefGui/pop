@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import stylex from "@stylexjs/unplugin/vite";
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite-plus";
 
@@ -7,6 +8,7 @@ export default defineConfig({
   root: fileURLToPath(new URL(".", import.meta.url)),
   base: "./",
   plugins: [
+    tailwindcss(),
     stylex(),
     react(),
     {

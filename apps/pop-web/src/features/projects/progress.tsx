@@ -1,3 +1,4 @@
+import { colors, radii } from "../../ui/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 
 export function progressRate(value: number) {
@@ -16,23 +17,34 @@ export function ProjectProgress({
   label: string;
 }) {
   return (
-    <progress {...stylex.props(styles.progress)} value={value} max={target} aria-label={label} />
+    <div
+      {...stylex.props(styles.progress)}
+      role="progressbar"
+      aria-valuenow={value}
+      aria-valuemin={0}
+      aria-valuemax={target}
+      aria-label={label}
+    >
+      <div {...stylex.props(styles.fill(Math.max(0, Math.min(1, value / target))))} />
+    </div>
   );
 }
 
 const styles = stylex.create({
   progress: {
     display: "block",
-    appearance: "none",
-    border: 0,
+    borderWidth: 0,
     height: 5,
     width: "100%",
-    borderRadius: 3,
+    borderRadius: radii.xs,
     overflow: "hidden",
-    backgroundColor: "#e0e5da",
-    accentColor: "#6c8663",
-    "::-webkit-progress-bar": { backgroundColor: "#e0e5da" },
-    "::-webkit-progress-value": { backgroundColor: "#6c8663" },
-    "::-moz-progress-bar": { backgroundColor: "#6c8663" },
+    backgroundColor: colors.progressTrack,
   },
+  fill: (fraction: number) => ({
+    height: "100%",
+    width: "100%",
+    backgroundColor: colors.progressFill,
+    transformOrigin: "left",
+    transform: `scaleX(${fraction})`,
+  }),
 });
