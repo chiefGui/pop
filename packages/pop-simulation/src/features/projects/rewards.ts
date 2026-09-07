@@ -1,12 +1,6 @@
-import type {
-  CharacterId,
-  CommitmentView,
-  OutcomeRewards,
-  Payout,
-  Rewards,
-  Side,
-} from "../contracts";
-import type { Random } from "./random";
+import type { CommitmentView, OutcomeRewards, Payout, Side } from "./model";
+import type { CharacterId, Rewards } from "../../model";
+import type { Random } from "../../kernel/random";
 
 interface WeightedShare {
   readonly characterId: CharacterId;

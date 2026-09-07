@@ -1,15 +1,18 @@
 import { Cause, Context, Effect, Exit, Layer, Schema, Semaphore } from "effect";
-import { CharacterAction, Command, CommitAction } from "./contracts";
-import type { WorldView } from "./contracts";
-import { ContentCatalog, SessionConfig } from "./internal/config";
-import { createEcsStore } from "./internal/ecs-store";
+import { ProjectAction, Command, CommitAction } from "./contracts";
+import type { WorldView, CommandResult, CharacterView } from "./contracts";
+import { ContentCatalog, SessionConfig } from "./config";
+import { createWorldState } from "./kernel/world";
+import { populateWorld } from "./features/world-generation/generate";
+import { createProjects } from "./features/projects/projects";
 import { InvalidCommand, InvalidContent, InvalidNpcDecision, SessionClosed } from "./errors";
 import type { ActionRejected, CommandError } from "./errors";
-import { NpcPolicy } from "./internal/npc-policy";
-import { SimulationRandom, pick } from "./internal/random";
+import { NpcPolicy } from "./features/ai/npc-policy";
+import { SimulationRandom } from "./random";
+import { pick } from "./kernel/random";
 
 const decodeCommand = Schema.decodeUnknownEffect(Command);
-const decodeAction = Schema.decodeUnknownEffect(CharacterAction);
+const decodeAction = Schema.decodeUnknownEffect(ProjectAction);
 const decodeNpcActions = Schema.decodeUnknownEffect(Schema.Array(CommitAction));
 
 export class Simulation extends Context.Service<
@@ -19,7 +22,7 @@ export class Simulation extends Context.Service<
     readonly checkAction: (
       input: unknown,
     ) => Effect.Effect<void, InvalidCommand | ActionRejected | SessionClosed>;
-    readonly dispatch: (input: unknown) => Effect.Effect<WorldView, CommandError>;
+    readonly dispatch: (input: unknown) => Effect.Effect<CommandResult, CommandError>;
   }
 >()("@pop/simulation/Simulation") {
   static readonly layer = Layer.effect(
@@ -31,33 +34,62 @@ export class Simulation extends Context.Service<
       const policy = yield* NpcPolicy;
       const gate = yield* Semaphore.make(1);
       let closed = false;
-      const store = yield* Effect.acquireRelease(
-        Effect.sync(() => createEcsStore(content, options, random)),
-        (store) =>
+      const world = yield* Effect.acquireRelease(
+        Effect.sync(() => createWorldState(content.world.zone)),
+        (world) =>
           gate.withPermit(
             Effect.sync(() => {
               closed = true;
-              store.dispose();
+              world.dispose();
             }),
           ),
       );
 
+      const playerId = populateWorld(world, content.world, options, random.world, random.names);
+      const projects = yield* Effect.acquireRelease(
+        Effect.sync(() => createProjects(world, content.projects)),
+        (projects) =>
+          gate.withPermit(
+            Effect.sync(() => {
+              closed = true;
+              projects.dispose();
+            }),
+          ),
+      );
+      function observe(): WorldView {
+        const characters: CharacterView[] = [];
+        for (const character of world.characters()) {
+          characters.push({
+            ...character,
+            availableInfluence: projects.availableInfluence(character),
+            isPlayer: character.id === playerId,
+          });
+        }
+        return {
+          day: world.day,
+          playerId,
+          zone: { ...world.getZone() },
+          characters,
+          projects: projects.getView(),
+        };
+      }
+
       // Initialization uses the same action rules; partial setup is scoped and discarded on failure.
       for (const definitionId of content.world.initialProjects) {
-        const eligible = store.eligibleFounders(definitionId);
+        const eligible = projects.eligibleFounders(definitionId, playerId);
         if (eligible.length === 0)
           return yield* new InvalidContent({
             message: `No eligible founder for initial project: ${definitionId}.`,
           });
-        const action: CharacterAction = {
+        const action: ProjectAction = {
           type: "create-project",
           actorId: pick(random.world, eligible),
           definitionId,
           influence: 1,
         };
-        const rejection = store.checkAction(action);
+        const rejection = projects.checkAction(action);
         if (rejection) return yield* new InvalidContent({ message: rejection.message });
-        store.applyAction(action);
+        projects.applyAction(action);
       }
 
       const ensureOpen = Effect.suspend(() => {
@@ -70,7 +102,7 @@ export class Simulation extends Context.Service<
         .withPermit(
           Effect.gen(function* () {
             yield* ensureOpen;
-            return store.getView();
+            return observe();
           }),
         )
         .pipe(Effect.withSpan("Simulation.getView"));
@@ -80,7 +112,7 @@ export class Simulation extends Context.Service<
         const action = yield* decodeAction(input).pipe(
           Effect.mapError((error) => new InvalidCommand({ message: error.message })),
         );
-        const rejection = store.checkAction(action);
+        const rejection = projects.checkAction(action);
         if (rejection) return yield* rejection;
       }, gate.withPermit);
 
@@ -88,27 +120,28 @@ export class Simulation extends Context.Service<
         const checkpoint = random.capture();
         let committed = false;
         yield* Effect.gen(function* () {
-          const proposed = yield* policy.decide(store.observeDecisions());
+          const proposed = yield* policy.decide(projects.observeDecisions(playerId));
           const actions = yield* decodeNpcActions(proposed).pipe(
             Effect.mapError((error) => new InvalidNpcDecision({ message: error.message })),
           );
           const actors = new Set<string>();
           // One action per NPC makes validation of the entire batch independent of application order.
           for (const action of actions) {
-            if (action.actorId === store.playerId || actors.has(action.actorId)) {
+            if (action.actorId === playerId || actors.has(action.actorId)) {
               return yield* new InvalidNpcDecision({
                 message:
                   "An NPC policy must return at most one commitment per NPC and cannot control the player.",
               });
             }
             actors.add(action.actorId);
-            const rejection = store.checkAction(action);
+            const rejection = projects.checkAction(action);
             if (rejection) return yield* new InvalidNpcDecision({ message: rejection.message });
           }
           // No asynchronous work, effects per entity, or interruption inside the commit phase.
           yield* Effect.sync(() => {
-            for (const action of actions) store.applyAction(action);
-            store.advanceProjects(random.rewards);
+            for (const action of actions) projects.applyAction(action);
+            world.advanceDay();
+            projects.advance(random.rewards);
             committed = true;
           }).pipe(Effect.uninterruptible);
         }).pipe(
@@ -128,12 +161,15 @@ export class Simulation extends Context.Service<
           );
           if (command.type === "advance-day") {
             yield* advance();
+            return { type: command.type, world: observe() };
           } else {
-            const rejection = store.checkAction(command);
+            const rejection = projects.checkAction(command);
             if (rejection) return yield* rejection;
-            yield* Effect.sync(() => store.applyAction(command)).pipe(Effect.uninterruptible);
+            const projectId = yield* Effect.sync(() => projects.applyAction(command)).pipe(
+              Effect.uninterruptible,
+            );
+            return { type: command.type, projectId, world: observe() };
           }
-          return store.getView();
         },
         (effect) =>
           gate.withPermit(

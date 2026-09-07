@@ -18,7 +18,10 @@ function start(content = fixture(), seed = 42) {
   const simulation = runtime.runSync(Simulation);
   return {
     getView: () => runtime.runSync(simulation.getView),
-    dispatch: (input: unknown) => runtime.runSync(Effect.result(simulation.dispatch(input))),
+    dispatch: (input: unknown) =>
+      runtime.runSync(
+        Effect.result(simulation.dispatch(input).pipe(Effect.map((result) => result.world))),
+      ),
   };
 }
 

@@ -23,19 +23,21 @@ test("the client publishes complete turns and exposes the same validation used b
   expect(initial.world!.characters[0]!.name).toBe("Ada");
   expect(client.getSnapshot()).toBe(initial);
   const project = initial.world!.projects[0]!;
-  expect(client.commitmentError(project.id, "support", 2)).toContain("influence");
-  client.commit(project.id, "support", 2);
-  expect(client.getSnapshot().error).toBe(client.commitmentError(project.id, "support", 2));
+  expect(client.projects.checkCommitment(project.id, "support", 2)).toContain("influence");
+  client.projects.commit(project.id, "support", 2);
+  expect(client.getSnapshot().error).toBe(
+    client.projects.checkCommitment(project.id, "support", 2),
+  );
   expect(client.getSnapshot().world).toBe(initial.world);
-  client.commit(project.id, "support", 1);
+  client.projects.commit(project.id, "support", 1);
   expect(client.getSnapshot().error).toBeNull();
   expect(client.getSnapshot().world!.characters[0]!.availableInfluence).toBe(0);
   for (let day = 0; day < 7; day += 1) client.advanceDay();
   const resolved = client.getSnapshot().world!;
   expect(resolved.day).toBe(7);
   expect(resolved.characters[0]!.availableInfluence).toBe(1);
-  expect(client.creationError("street-cleanup", 1)).toBeUndefined();
-  client.createProject("street-cleanup", 1);
+  expect(client.projects.checkCreation("street-cleanup", 1)).toBeUndefined();
+  client.projects.create("street-cleanup", 1);
   expect(
     client.getSnapshot().world!.projects.some((entry) => entry.creatorId === resolved.playerId),
   ).toBe(true);

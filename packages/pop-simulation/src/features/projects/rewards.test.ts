@@ -1,7 +1,7 @@
 import { expect, test } from "vite-plus/test";
 import { distributeRewards } from "./rewards";
-import { createRandom } from "./random";
-import type { CommitmentView, OutcomeRewards } from "../contracts";
+import { createRandom } from "../../kernel/random";
+import type { CommitmentView, OutcomeRewards } from "./model";
 
 test("largest remainders conserve whole pools, seed ties, and keep the creator bonus separate", () => {
   const commitments: CommitmentView[] = [0, 1, 2].map((index) => ({

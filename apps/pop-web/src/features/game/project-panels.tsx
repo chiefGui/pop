@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { ReactNode } from "react";
-import type { GameClient } from "@pop/game-client";
-import type { CharacterView, ProjectDefinition, ProjectView, WorldView } from "@pop/simulation";
+import type { GameClient, ProjectDetails } from "@pop/game-client";
+import type { CharacterView, ProjectDefinition, ProjectId } from "@pop/simulation";
 import { date, rateText, rewardText } from "./format";
 
 function RewardTable({ definition }: { definition: ProjectDefinition }) {
@@ -47,13 +47,13 @@ export function CreationPanel({
   client: GameClient;
   projects: readonly ProjectDefinition[];
   player: CharacterView;
-  onCreated: () => void;
+  onCreated: (projectId: ProjectId) => void;
 }) {
   const [definitionId, setDefinitionId] = useState(projects[0]!.id);
   const [amountInput, setAmountInput] = useState("1");
   const amount = Number(amountInput);
   const definition = projects.find((entry) => entry.id === definitionId)!;
-  const error = client.creationError(definitionId, amount);
+  const error = client.projects.checkCreation(definitionId, amount);
   return (
     <section className="project-detail" aria-labelledby="creation-heading">
       <div className="eyebrow">Your next step</div>
@@ -98,8 +98,8 @@ export function CreationPanel({
         className="commit-form"
         onSubmit={(event) => {
           event.preventDefault();
-          client.createProject(definitionId, amount);
-          if (!client.getSnapshot().error) onCreated();
+          const projectId = client.projects.create(definitionId, amount);
+          if (projectId) onCreated(projectId);
         }}
       >
         <label htmlFor="founding-influence">Founding influence</label>
@@ -128,36 +128,27 @@ export function CreationPanel({
 
 export function ProjectDetail({
   client,
-  definition,
-  project,
-  world,
+  details,
   player,
 }: {
   client: GameClient;
-  definition: ProjectDefinition;
-  project: ProjectView;
-  world: WorldView;
+  details: ProjectDetails;
   player: CharacterView;
 }) {
   const [amountInput, setAmountInput] = useState("1");
   const amount = Number(amountInput);
-  const people = new Map(world.characters.map((character) => [character.id, character]));
-  const creator = people.get(project.creatorId)!;
-  const own = project.commitments.find((entry) => entry.characterId === player.id);
-  const supportError = client.commitmentError(project.id, "support", amount);
-  const opposeError = client.commitmentError(project.id, "oppose", amount);
+  const { project, definition, creator, ownCommitment: own } = details;
+  const supportError = client.projects.checkCommitment(project.id, "support", amount);
+  const opposeError = client.projects.checkCommitment(project.id, "oppose", amount);
   let actionHint = "Choose a side. You can add influence, but cannot withdraw or switch sides.";
   if (supportError && opposeError) actionHint = supportError;
   if (player.availableInfluence === 0)
     actionHint = "Your influence is committed. Advance days to resolve projects and recover it.";
   let ownShare: ReactNode;
   if (own) {
-    const sideWeight = project.commitments
-      .filter((entry) => entry.side === own.side)
-      .reduce((total, entry) => total + entry.influenceDays, 0);
     let share = "Share starts accruing next day";
-    if (sideWeight > 0)
-      share = `${Math.round((100 * own.influenceDays) / sideWeight)}% of your side’s weight`;
+    if (details.ownShare !== undefined)
+      share = `${Math.round(100 * details.ownShare)}% of your side’s weight`;
     let sideLabel = "Supporting";
     if (own.side === "oppose") sideLabel = "Opposing";
     ownShare = (
@@ -237,14 +228,14 @@ export function ProjectDetail({
             <button
               className="button primary"
               disabled={Boolean(supportError)}
-              onClick={() => client.commit(project.id, "support", amount)}
+              onClick={() => client.projects.commit(project.id, "support", amount)}
             >
               Support
             </button>
             <button
               className="button secondary"
               disabled={Boolean(opposeError)}
-              onClick={() => client.commit(project.id, "oppose", amount)}
+              onClick={() => client.projects.commit(project.id, "oppose", amount)}
             >
               Oppose
             </button>
@@ -286,9 +277,9 @@ export function ProjectDetail({
               </tr>
             </thead>
             <tbody>
-              {project.commitments.map((entry) => (
+              {details.participants.map(({ commitment: entry, character }) => (
                 <tr key={entry.characterId}>
-                  <td>{people.get(entry.characterId)!.name}</td>
+                  <td>{character.name}</td>
                   <td>{entry.side}</td>
                   <td>{entry.influence}</td>
                   <td>{entry.influenceDays}</td>

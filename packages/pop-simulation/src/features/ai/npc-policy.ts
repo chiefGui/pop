@@ -1,22 +1,9 @@
 import { Context, Effect, Layer } from "effect";
-import type { CharacterId, CommitAction, ProjectId, Side, ZoneId } from "../contracts";
-import { ContentCatalog } from "./config";
-import { SimulationRandom, pick } from "./random";
-
-export interface DecisionObservation {
-  readonly characters: readonly {
-    readonly id: CharacterId;
-    readonly zoneId: ZoneId;
-    readonly availableInfluence: number;
-  }[];
-  readonly projectsByZone: ReadonlyMap<
-    ZoneId,
-    readonly {
-      readonly id: ProjectId;
-      readonly sides: ReadonlyMap<CharacterId, Side>;
-    }[]
-  >;
-}
+import type { CommitAction, Side } from "../projects/model";
+import type { DecisionObservation } from "../projects/observation";
+import { ContentCatalog } from "../../config";
+import { SimulationRandom } from "../../random";
+import { pick } from "../../kernel/random";
 
 export class NpcPolicy extends Context.Service<
   NpcPolicy,

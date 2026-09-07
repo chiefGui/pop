@@ -1,34 +1,20 @@
-import { addComponent, addEntity, createWorld, deleteWorld, query, removeEntity } from "bitecs";
+import { addComponent, addEntity, query, removeEntity } from "bitecs";
 import type {
   ActiveProjectView,
-  CharacterAction,
-  CharacterId,
-  CharacterView,
+  ProjectAction,
   CommitmentView,
-  GameContent,
   Outcome,
   ProjectDefinition,
   ProjectId,
   ResolvedProjectView,
   Side,
-  SessionOptions,
-  WorldView,
-  ZoneId,
-} from "../contracts";
-import { integer } from "./random";
-import type { SimulationRandom, Random } from "./random";
-import type { DecisionObservation } from "./npc-policy";
-import { ActionRejected } from "../errors";
+} from "./model";
+import type { Character, CharacterId, ZoneId } from "../../model";
+import type { WorldState } from "../../kernel/world";
+import type { Random } from "../../kernel/random";
+import type { DecisionObservation } from "./observation";
+import { ActionRejected } from "./model";
 import { distributeRewards } from "./rewards";
-
-interface Character {
-  id: CharacterId;
-  name: string;
-  zoneId: ZoneId;
-  reputation: number;
-  popularity: number;
-  influence: number;
-}
 
 interface Project {
   id: ProjectId;
@@ -50,67 +36,24 @@ interface Commitment {
 
 const HISTORY_LIMIT = 40;
 
-export function createEcsStore(
-  source: GameContent,
-  options: SessionOptions,
-  random: SimulationRandom["Service"],
-) {
-  const content = source;
-  const definitions = new Map(content.projects.map((definition) => [definition.id, definition]));
-  const CharacterData: Character[] = [];
+export function createProjects(state: WorldState, authored: readonly ProjectDefinition[]) {
+  const world = state.ecs;
+  const definitions = new Map(authored.map((definition) => [definition.id, definition]));
   const ProjectData: Project[] = [];
   const CommitmentData: Commitment[] = [];
-  const ZoneData: GameContent["world"]["zone"][] = [];
-  const world = createWorld({
-    components: { CharacterData, ProjectData, CommitmentData, ZoneData },
-  });
-  const characterEntities = new Map<CharacterId, number>();
   const projectEntities = new Map<ProjectId, number>();
-  // These indexes contain handles only; entity components remain the source of truth.
+  // Indexes contain handles only; the components own the data.
   const commitmentsByCharacter = new Map<CharacterId, Set<number>>();
   const commitmentsByProject = new Map<ProjectId, Map<CharacterId, number>>();
   const activeTypes = new Map<ZoneId, Map<string, ProjectId>>();
   const history: ResolvedProjectView[] = [];
-  const generation = random.world;
-  const names = random.names;
-  let day = 0;
   let nextProject = 0;
-  const playerId: CharacterId = "character:0";
-  const zoneEntity = addEntity(world);
-  addComponent(world, zoneEntity, ZoneData);
-  ZoneData[zoneEntity] = content.world.zone;
-
-  function addCharacter(character: Character) {
-    const entity = addEntity(world);
-    addComponent(world, entity, CharacterData);
-    CharacterData[entity] = character;
-    characterEntities.set(character.id, entity);
-    commitmentsByCharacter.set(character.id, new Set());
-  }
-
-  addCharacter({
-    id: playerId,
-    name: options.playerName,
-    zoneId: content.world.zone.id,
-    reputation: 0,
-    popularity: 0,
-    influence: 1,
-  });
-  for (let index = 1; index <= content.world.npcCount; index += 1) {
-    addCharacter({
-      id: `character:${index}`,
-      name: `${content.world.firstNames[integer(names, 0, content.world.firstNames.length - 1)]} ${content.world.lastNames[integer(names, 0, content.world.lastNames.length - 1)]}`,
-      zoneId: content.world.zone.id,
-      reputation: integer(generation, ...content.world.npcReputation),
-      popularity: integer(generation, ...content.world.npcPopularity),
-      influence: integer(generation, ...content.world.npcInfluence),
-    });
-  }
 
   function available(character: Character) {
+    const commitments = commitmentsByCharacter.get(character.id);
+    if (!commitments) return character.influence;
     let committed = 0;
-    for (const entity of commitmentsByCharacter.get(character.id)!)
-      committed += CommitmentData[entity]!.influence;
+    for (const entity of commitments) committed += CommitmentData[entity]!.influence;
     return character.influence - committed;
   }
 
@@ -130,7 +73,12 @@ export function createEcsStore(
     addComponent(world, entity, CommitmentData);
     CommitmentData[entity] = { characterId, projectId, side, influence, influenceDays: 0 };
     index.set(characterId, entity);
-    commitmentsByCharacter.get(characterId)!.add(entity);
+    let characterCommitments = commitmentsByCharacter.get(characterId);
+    if (!characterCommitments) {
+      characterCommitments = new Set();
+      commitmentsByCharacter.set(characterId, characterCommitments);
+    }
+    characterCommitments.add(entity);
   }
 
   function createProject(character: Character, definition: ProjectDefinition, influence: number) {
@@ -142,8 +90,8 @@ export function createEcsStore(
       definitionId: definition.id,
       zoneId: character.zoneId,
       creatorId: character.id,
-      startedDay: day,
-      deadlineDay: day + definition.durationDays,
+      startedDay: state.day,
+      deadlineDay: state.day + definition.durationDays,
       progress: 0,
     };
     projectEntities.set(id, entity);
@@ -155,13 +103,13 @@ export function createEcsStore(
     }
     zoneTypes.set(definition.id, id);
     addCommitment(character.id, id, "support", influence);
+    return id;
   }
 
-  function actionError(action: CharacterAction): ActionRejected | undefined {
-    const entity = characterEntities.get(action.actorId);
-    if (entity === undefined)
+  function actionError(action: ProjectAction): ActionRejected | undefined {
+    const character = state.getCharacter(action.actorId);
+    if (!character)
       return new ActionRejected({ reason: "CharacterMissing", message: "Character not found." });
-    const character = CharacterData[entity]!;
     if (available(character) < action.influence)
       return new ActionRejected({
         reason: "InsufficientInfluence",
@@ -212,29 +160,28 @@ export function createEcsStore(
   }
 
   // Only the session service calls mutations, after schema and world-rule validation.
-  function applyAction(action: CharacterAction): void {
+  function applyAction(action: ProjectAction): ProjectId {
     if (action.type === "create-project") {
-      createProject(
-        CharacterData[characterEntities.get(action.actorId)!]!,
+      return createProject(
+        state.getCharacter(action.actorId)!,
         definitions.get(action.definitionId)!,
         action.influence,
       );
     } else {
       addCommitment(action.actorId, action.projectId, action.side, action.influence);
+      return action.projectId;
     }
   }
 
-  function eligibleFounders(definitionId: string) {
+  function eligibleFounders(definitionId: string, playerId: CharacterId) {
     const definition = definitions.get(definitionId)!;
-    const eligible = [...characterEntities.values()]
-      .map((entity) => CharacterData[entity]!)
-      .filter(
-        (character) =>
-          character.id !== playerId &&
-          available(character) > 0 &&
-          character.reputation >= definition.requirements.reputation &&
-          character.popularity >= definition.requirements.popularity,
-      );
+    const eligible = [...state.characters()].filter(
+      (character) =>
+        character.id !== playerId &&
+        available(character) > 0 &&
+        character.reputation >= definition.requirements.reputation &&
+        character.popularity >= definition.requirements.popularity,
+    );
     return eligible.map((character) => character.id);
   }
 
@@ -256,7 +203,7 @@ export function createEcsStore(
     return { ...project, status: "active", support, opposition, commitments };
   }
 
-  function observeDecisions(): DecisionObservation {
+  function observeDecisions(playerId: CharacterId): DecisionObservation {
     const projectsByZone = new Map<ZoneId, { id: ProjectId; sides: Map<CharacterId, Side> }[]>();
     for (const entity of query(world, [ProjectData])) {
       const project = ProjectData[entity]!;
@@ -272,8 +219,7 @@ export function createEcsStore(
       projects.push({ id: project.id, sides });
     }
     const characters: { id: CharacterId; zoneId: ZoneId; availableInfluence: number }[] = [];
-    for (const entity of query(world, [CharacterData])) {
-      const character = CharacterData[entity]!;
+    for (const character of state.characters()) {
       if (character.id === playerId) continue;
       characters.push({
         id: character.id,
@@ -285,7 +231,7 @@ export function createEcsStore(
   }
 
   function advanceProjects(rewardTies: Random) {
-    day += 1;
+    const day = state.day;
     for (const entity of query(world, [CommitmentData])) {
       const commitment = CommitmentData[entity]!;
       commitment.influenceDays += commitment.influence;
@@ -311,7 +257,7 @@ export function createEcsStore(
         rewardTies,
       );
       for (const payout of payouts) {
-        const character = CharacterData[characterEntities.get(payout.characterId)!]!;
+        const character = state.getCharacter(payout.characterId)!;
         character.reputation += payout.participation.reputation + payout.creator.reputation;
         character.popularity += payout.participation.popularity + payout.creator.popularity;
       }
@@ -337,37 +283,17 @@ export function createEcsStore(
     }
   }
 
-  function getView(): WorldView {
-    const characters: CharacterView[] = [];
-    for (const entity of query(world, [CharacterData])) {
-      const character = CharacterData[entity]!;
-      characters.push({
-        ...character,
-        availableInfluence: available(character),
-        isPlayer: character.id === playerId,
-      });
-    }
-    const projects = [...query(world, [ProjectData])].map((entity) =>
+  function getView() {
+    const active = [...query(world, [ProjectData])].map((entity) =>
       observeProject(ProjectData[entity]!),
     );
-    // All returned state is detached. UI code can never mutate the ECS or its history.
-    return {
-      day,
-      playerId,
-      zone: { ...ZoneData[zoneEntity]! },
-      characters,
-      projects: [...projects, ...structuredClone(history)],
-    };
+    return [...active, ...structuredClone(history)];
   }
 
   function dispose() {
-    deleteWorld(world);
-    CharacterData.length = 0;
     ProjectData.length = 0;
     CommitmentData.length = 0;
-    ZoneData.length = 0;
     history.length = 0;
-    characterEntities.clear();
     projectEntities.clear();
     commitmentsByCharacter.clear();
     commitmentsByProject.clear();
@@ -375,13 +301,13 @@ export function createEcsStore(
   }
 
   return {
-    playerId,
+    availableInfluence: available,
     getView,
     checkAction: actionError,
     applyAction,
     eligibleFounders,
     observeDecisions,
-    advanceProjects,
+    advance: advanceProjects,
     dispose,
   };
 }

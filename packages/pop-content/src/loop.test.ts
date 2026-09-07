@@ -22,7 +22,7 @@ test("the authored opening takes a nobody from contribution to creating and reso
       expect(player.reputation).toBeGreaterThanOrEqual(3);
       expect(player.popularity).toBeGreaterThanOrEqual(3);
       expect(player.availableInfluence).toBe(1);
-      const afterCreation = yield* simulation.dispatch({
+      const { world: afterCreation } = yield* simulation.dispatch({
         type: "create-project",
         actorId: player.id,
         definitionId: "street-cleanup",

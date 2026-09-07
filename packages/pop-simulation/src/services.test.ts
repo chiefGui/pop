@@ -1,8 +1,8 @@
 import { expect, test } from "vite-plus/test";
 import { Cause, Deferred, Effect, Exit, Fiber, Layer, ManagedRuntime, Result } from "effect";
 import { Simulation, simulationLayer } from "./simulation";
-import { SimulationRandom } from "./internal/random";
-import { NpcPolicy } from "./internal/npc-policy";
+import { SimulationRandom } from "./random";
+import { NpcPolicy } from "./features/ai/npc-policy";
 import { fixture } from "../test/fixture";
 
 const options = { seed: 42, playerName: "Player" };
@@ -119,7 +119,7 @@ test("concurrent days serialize around an asynchronous NPC policy", async () => 
         [1, 2, 3].map(() => simulation.dispatch({ type: "advance-day" })),
         { concurrency: "unbounded" },
       );
-      expect(results.map((view) => view.day).sort()).toEqual([1, 2, 3]);
+      expect(results.map((result) => result.world.day).sort()).toEqual([1, 2, 3]);
       expect((yield* simulation.getView).day).toBe(3);
     }).pipe(Effect.provide(simulationLayer(fixture(), options, policy))),
   );
@@ -148,7 +148,7 @@ test("an invalid NPC batch is rejected in full before any commitment is applied"
   await Effect.runPromise(
     Effect.gen(function* () {
       const simulation = yield* Simulation;
-      const before = yield* simulation.dispatch({
+      const { world: before } = yield* simulation.dispatch({
         type: "create-project",
         actorId: "character:1",
         definitionId: "cleanup",
@@ -189,7 +189,9 @@ test("interrupting an uncommitted day restores randomness and releases the sessi
     expect(random.capture()).toEqual(checkpoint);
     expect((await runtime.runPromise(simulation.getView)).day).toBe(0);
     wait = false;
-    expect((await runtime.runPromise(simulation.dispatch({ type: "advance-day" }))).day).toBe(1);
+    expect((await runtime.runPromise(simulation.dispatch({ type: "advance-day" }))).world.day).toBe(
+      1,
+    );
   } finally {
     await runtime.dispose();
   }

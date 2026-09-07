@@ -1,7 +1,8 @@
 import { useState, useSyncExternalStore } from "react";
 import { gameContent } from "@pop/content";
 import { createGameClient } from "@pop/game-client";
-import type { ProjectId, ProjectView, WorldView } from "@pop/simulation";
+import type { ProjectDetails } from "@pop/game-client";
+import type { ProjectId, WorldView } from "@pop/simulation";
 import { date, rateText } from "./format";
 import { StartScreen } from "./start-screen";
 import { CreationPanel, ProjectDetail } from "./project-panels";
@@ -10,7 +11,6 @@ import "./game.css";
 
 const client = createGameClient(gameContent, 20260906);
 if (import.meta.hot) import.meta.hot.dispose(() => client.dispose());
-const definitions = new Map(gameContent.projects.map((definition) => [definition.id, definition]));
 
 function District({
   world,
@@ -21,16 +21,17 @@ function District({
   error: string | null;
   message: string;
 }) {
-  const player = world.characters.find((character) => character.isPlayer)!;
+  const board = client.projects.getView()!;
+  const player = board.player;
   const [selection, setSelection] = useState<ProjectId | "create">(
     () => world.projects[0]?.id ?? "create",
   );
   const [tab, setTab] = useState<"active" | "resolved" | "people">("active");
-  const active = world.projects.filter((project) => project.status === "active");
-  const resolved = world.projects.filter((project) => project.status !== "active").toReversed();
-  let listed: readonly ProjectView[] = active;
+  const { active, resolved } = board;
+  let listed: readonly ProjectDetails[] = active;
   if (tab === "resolved") listed = resolved;
-  const selected = world.projects.find((project) => project.id === selection);
+  let selected: ProjectDetails | undefined;
+  if (selection !== "create") selected = board.byId.get(selection);
   const firstProject = gameContent.projects[0]!;
   const eligible =
     player.reputation >= firstProject.requirements.reputation &&
@@ -152,9 +153,7 @@ function District({
                 {tab === "resolved" && "Outcomes will appear here as projects resolve."}
               </div>
             )}
-            {listed.map((project) => {
-              const definition = definitions.get(project.definitionId)!;
-              const mine = project.commitments.find((entry) => entry.characterId === player.id);
+            {listed.map(({ project, definition, ownCommitment: mine }) => {
               let timing = `${project.deadlineDay - world.day} days left`;
               if (project.status === "succeeded") timing = "Succeeded";
               if (project.status === "failed") timing = "Failed";
@@ -194,23 +193,14 @@ function District({
               client={client}
               projects={gameContent.projects}
               player={player}
-              onCreated={() => {
-                const created = client
-                  .getSnapshot()
-                  .world?.projects.findLast(
-                    (project) => project.status === "active" && project.creatorId === player.id,
-                  );
-                if (created) setSelection(created.id);
-              }}
+              onCreated={setSelection}
             />
           )}
           {selection !== "create" && selected && (
             <ProjectDetail
-              key={selected.id}
+              key={selected.project.id}
               client={client}
-              definition={definitions.get(selected.definitionId)!}
-              project={selected}
-              world={world}
+              details={selected}
               player={player}
             />
           )}

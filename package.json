@@ -23,7 +23,7 @@
     "test:smoke": "node scripts/smoke.ts",
     "test:game": "vp test run packages/pop-simulation packages/pop-content/src/loop.test.ts packages/pop-game-client",
     "typecheck:game": "tsc --project tsconfig.game.json",
-    "benchmark:game": "bun packages/pop-content/src/benchmark.ts"
+    "benchmark:game": "bun packages/pop-content/benchmarks/turns.ts"
   },
   "devDependencies": {
     "@types/node": "26.4.1",

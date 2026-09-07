@@ -1,6 +1,6 @@
 import { Context, Effect, Layer, Schema } from "effect";
-import { GameContent, SessionOptions } from "../contracts";
-import { InvalidContent, InvalidSessionOptions } from "../errors";
+import { GameContent, SessionOptions } from "./contracts";
+import { InvalidContent, InvalidSessionOptions } from "./errors";
 
 const decodeContent = Schema.decodeUnknownEffect(GameContent);
 const decodeOptions = Schema.decodeUnknownEffect(SessionOptions);

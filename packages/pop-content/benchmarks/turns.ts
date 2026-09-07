@@ -1,6 +1,6 @@
 import { Effect, ManagedRuntime } from "effect";
 import { Simulation, simulationLayer } from "@pop/simulation";
-import { gameContent } from "./index";
+import { gameContent } from "../src/index";
 
 // Measures the Effect command + detached UI observation path, excluding rendering.
 for (const population of [100, 1000]) {

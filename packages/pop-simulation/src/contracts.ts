@@ -1,67 +1,14 @@
 import { Schema } from "effect";
+import type { CharacterId, CharacterView } from "./model";
+import { ProjectAction, ProjectDefinition } from "./features/projects/model";
+import type { ProjectId, ProjectView } from "./features/projects/model";
+import { WorldDefinition } from "./features/world-generation/model";
 
-const NonnegativeInteger = Schema.Int.check(
-  Schema.isBetween({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER }),
-);
-const AuthoredAmount = Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 1_000_000 }));
-const Name = Schema.Trim.check(Schema.isMinLength(1), Schema.isMaxLength(100));
-const DefinitionId = Schema.NonEmptyString.check(Schema.isTrimmed());
-const GenerationAmount = Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 1000 }));
-const GenerationRange = Schema.Tuple([GenerationAmount, GenerationAmount]).check(
-  Schema.makeFilter((range) => {
-    if (range[0] > range[1]) return "Generation ranges must have minimum <= maximum.";
-  }),
-);
-const Probability = Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 1 }));
+export { CharacterId, ZoneId, Rewards } from "./model";
+export type { CharacterView } from "./model";
+export * from "./features/projects/model";
+export { WorldDefinition } from "./features/world-generation/model";
 
-export const CharacterId = Schema.TemplateLiteral(["character:", NonnegativeInteger]).check(
-  Schema.isPattern(/^character:(0|[1-9]\d*)$/),
-);
-export type CharacterId = typeof CharacterId.Type;
-export const ProjectId = Schema.TemplateLiteral(["project:", NonnegativeInteger]).check(
-  Schema.isPattern(/^project:(0|[1-9]\d*)$/),
-);
-export type ProjectId = typeof ProjectId.Type;
-export const ZoneId = Schema.TemplateLiteral(["zone:", Schema.NonEmptyString]).check(
-  Schema.isMinLength(6),
-);
-export type ZoneId = typeof ZoneId.Type;
-export const Side = Schema.Literals(["support", "oppose"]);
-export type Side = typeof Side.Type;
-export const Outcome = Schema.Literals(["succeeded", "failed"]);
-export type Outcome = typeof Outcome.Type;
-
-export const Rewards = Schema.Struct({ reputation: AuthoredAmount, popularity: AuthoredAmount });
-export type Rewards = typeof Rewards.Type;
-export const OutcomeRewards = Schema.Struct({
-  support: Rewards,
-  oppose: Rewards,
-  creator: Rewards,
-});
-export type OutcomeRewards = typeof OutcomeRewards.Type;
-export const ProjectDefinition = Schema.Struct({
-  id: DefinitionId,
-  name: Name,
-  description: Schema.String,
-  durationDays: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 3650 })),
-  progressTarget: Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: 1_000_000 })),
-  requirements: Rewards,
-  rewards: Schema.Struct({ succeeded: OutcomeRewards, failed: OutcomeRewards }),
-});
-export type ProjectDefinition = typeof ProjectDefinition.Type;
-export const WorldDefinition = Schema.Struct({
-  zone: Schema.Struct({ id: ZoneId, name: Name, description: Schema.String }),
-  npcCount: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 10_000 })),
-  firstNames: Schema.Array(Name).check(Schema.isMinLength(1)),
-  lastNames: Schema.Array(Name).check(Schema.isMinLength(1)),
-  npcReputation: GenerationRange,
-  npcPopularity: GenerationRange,
-  npcInfluence: GenerationRange,
-  npcParticipationChance: Probability,
-  npcSupportChance: Probability,
-  initialProjects: Schema.Array(DefinitionId),
-});
-export type WorldDefinition = typeof WorldDefinition.Type;
 export const GameContent = Schema.Struct({
   projects: Schema.Array(ProjectDefinition),
   world: WorldDefinition,
@@ -85,55 +32,6 @@ export const SessionOptions = Schema.Struct({
 });
 export type SessionOptions = typeof SessionOptions.Type;
 
-export interface CharacterView {
-  readonly id: CharacterId;
-  readonly name: string;
-  readonly zoneId: ZoneId;
-  readonly reputation: number;
-  readonly popularity: number;
-  readonly influence: number;
-  readonly availableInfluence: number;
-  readonly isPlayer: boolean;
-}
-
-export interface CommitmentView {
-  readonly characterId: CharacterId;
-  readonly side: Side;
-  readonly influence: number;
-  readonly influenceDays: number;
-}
-
-export interface Payout {
-  readonly characterId: CharacterId;
-  readonly participation: Rewards;
-  readonly creator: Rewards;
-}
-
-interface ProjectBase {
-  readonly id: ProjectId;
-  readonly definitionId: string;
-  readonly zoneId: ZoneId;
-  readonly creatorId: CharacterId;
-  readonly startedDay: number;
-  readonly deadlineDay: number;
-  readonly progress: number;
-  readonly support: number;
-  readonly opposition: number;
-  readonly commitments: readonly CommitmentView[];
-}
-
-export interface ActiveProjectView extends ProjectBase {
-  readonly status: "active";
-}
-
-export interface ResolvedProjectView extends ProjectBase {
-  readonly status: Outcome;
-  readonly resolvedDay: number;
-  readonly payouts: readonly Payout[];
-}
-
-export type ProjectView = ActiveProjectView | ResolvedProjectView;
-
 export interface WorldView {
   readonly day: number;
   readonly playerId: CharacterId;
@@ -142,25 +40,16 @@ export interface WorldView {
   readonly projects: readonly ProjectView[];
 }
 
-const CommittedInfluence = NonnegativeInteger.check(Schema.isGreaterThan(0));
-export const CommitAction = Schema.Struct({
-  type: Schema.Literal("commit"),
-  actorId: CharacterId,
-  projectId: ProjectId,
-  side: Side,
-  influence: CommittedInfluence,
-});
-export type CommitAction = typeof CommitAction.Type;
-export const CreateProjectAction = Schema.Struct({
-  type: Schema.Literal("create-project"),
-  actorId: CharacterId,
-  definitionId: DefinitionId,
-  influence: CommittedInfluence,
-});
-export const CharacterAction = Schema.Union([CommitAction, CreateProjectAction]);
-export type CharacterAction = typeof CharacterAction.Type;
 export const Command = Schema.Union([
-  CharacterAction,
+  ProjectAction,
   Schema.Struct({ type: Schema.Literal("advance-day") }),
 ]);
 export type Command = typeof Command.Type;
+
+export type CommandResult =
+  | { readonly type: "advance-day"; readonly world: WorldView }
+  | {
+      readonly type: "commit" | "create-project";
+      readonly projectId: ProjectId;
+      readonly world: WorldView;
+    };

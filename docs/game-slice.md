@@ -15,10 +15,16 @@ Package directories use `pop-`; imports use the `@pop/` scope. `packages/pop-con
 
 ### Module layout
 
-- `pop-simulation/src/simulation.ts` is the session service and composition boundary. `contracts.ts` and `errors.ts` describe its public inputs, observations, and failures. `internal/` contains ECS storage, reward allocation, validated configuration, seeded randomness, and the NPC policy implementation. Package exports expose the service and NPC policy extension point, not storage or random checkpoint machinery.
-- `pop-content/src/projects.ts` holds authored project definitions; `world.ts` holds the starting district and character generation settings. `content.ts` assembles the catalog. Its package entry point exports only that catalog.
-- `pop-game-client/src/client.ts` owns runtime lifecycle, player-bound actions, validation feedback, and snapshot subscriptions together. Its `index.ts` declares the public API. A client action such as `createProject` translates player intent; eligibility, commitments, and mutations remain simulation responsibilities.
-- `pop-web/src/features/game/` owns the game screen, arrival form, project panels, people view, formatting, and styles. The screen wires the client and content; panels receive those dependencies as inputs. The home route only selects the screen.
+- `pop-simulation/src/simulation.ts` owns the session scope, serialized commands, and daily orchestration. `contracts.ts` composes public commands, content, and observations from their owning models. Shared identities and character resources live in `model.ts`.
+- `pop-simulation/src/kernel/` owns ECS lifetime, basic world storage, day advancement, and deterministic random primitives. It has no imports from gameplay features. The root `random.ts` service configures the session's named streams and rollback checkpoints; `config.ts` validates session inputs.
+- `pop-simulation/src/features/projects/` owns project schemas, rejection reasons, commitments, eligibility, resolution, rewards, and project observations. `features/world-generation/` owns population configuration and seeded character generation. `features/ai/` chooses project actions from detached observations.
+- `pop-content/src/projects.ts` holds authored project definitions; `world.ts` holds the starting district and character generation settings. `content.ts` assembles the catalog. Its package entry point exports only that catalog. Turn benchmarks live separately under `benchmarks/`.
+- `pop-game-client/src/session.ts` owns runtime lifecycle, command execution, typed failure feedback, and stable snapshot subscriptions. `features/projects/` binds project actions to the player and prepares project views, including authored definitions, participants, and contribution shares. `client.ts` assembles the public client and the next-day action.
+- `pop-web/src/features/game/` owns the screen, forms, formatting, and styles. It consumes prepared project views and uses `client.projects.create`, `commit`, `checkCreation`, and `checkCommitment`. Creation returns the project ID for immediate selection. The home route only selects the screen.
+
+Features use kernel capabilities; the kernel never imports features. There is one ECS world and one serialized mutation boundary. Project components and indexes stay private to the project feature. The session composes world and project observations and disposes feature storage before releasing the ECS. This keeps project resolution, payouts, commitment release, and uniqueness cleanup in one operation.
+
+`Simulation.dispatch` returns a `CommandResult`: the completed `world`, the command `type`, and the affected `projectId` for project commands. `Simulation.getView` returns only the world. Public package exports stay small; consumers do not import feature implementations or kernel storage directly.
 
 Keep a rule and its invariants together. Do not split commands into forwarding files or expose ECS components merely to make files shorter. Extract a module when it can own a coherent decision behind a small interface. Behavior tests stay beside the module they verify; shared simulation fixtures live under `test/`.
 
@@ -54,6 +60,8 @@ On next day:
 Each project defines a reward vector for each side and the creator, separately for success and failure. Each side's pool is divided by its participants' accumulated influence-days. Whole allocations use largest remainders, with seeded tie-breaking and exact integer arithmetic. Empty sides receive nothing. Creator bonuses are separate. Influence always returns.
 
 The UI retains the latest 40 resolved projects with participants, weights, and payouts. Old outcomes leave this deliberately bounded, in-memory recent-history buffer. Active simulation queries never process resolved projects.
+
+Career milestone text currently derives from this recent history and can regress after an older achievement is evicted. Lasting career achievements need durable in-session facts; the topology change does not add that progression mechanic.
 
 ## Randomness
 
