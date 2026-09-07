@@ -1,6 +1,6 @@
 import { Cause, Effect, Exit, ManagedRuntime, Result } from "effect";
 import { Simulation, simulationLayer } from "@pop/simulation";
-import type { ProjectAction, Command, GameContent, WorldView } from "@pop/simulation";
+import type { ProjectAction, Command, GameContent, GameSetup, WorldView } from "@pop/simulation";
 
 export interface GameSnapshot {
   readonly world: WorldView | null;
@@ -9,12 +9,12 @@ export interface GameSnapshot {
 }
 
 type SessionRuntime = ReturnType<typeof makeRuntime>;
-function makeRuntime(content: GameContent, seed: number, playerName: string) {
-  return ManagedRuntime.make(simulationLayer(content, { seed, playerName }));
+function makeRuntime(content: GameContent, setup: GameSetup, playerName: string) {
+  return ManagedRuntime.make(simulationLayer(content, { ...setup, playerName }));
 }
 
 // This is the imperative UI boundary. All game operations execute in the session's Effect runtime.
-export function createSession(content: GameContent, seed: number) {
+export function createSession(content: GameContent, setup: GameSetup) {
   let session: { runtime: SessionRuntime; simulation: Simulation["Service"] } | undefined;
   let snapshot: GameSnapshot = { world: null, error: null, message: "" };
   const listeners = new Set<() => void>();
@@ -57,7 +57,7 @@ export function createSession(content: GameContent, seed: number) {
     execute,
     start(name: string) {
       if (session) return;
-      const runtime = makeRuntime(content, seed, name);
+      const runtime = makeRuntime(content, setup, name);
       const started = runtime.runSyncExit(
         Effect.gen(function* () {
           const simulation = yield* Simulation;

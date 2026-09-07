@@ -1,19 +1,19 @@
-import { fixture } from "../test/fixture";
+import { fixture, setup } from "../test/fixture";
 import { afterEach, expect, test } from "vite-plus/test";
 import { Effect, ManagedRuntime, Result } from "effect";
 import { Simulation, simulationLayer } from "./simulation";
-import type { CharacterId, GameContent } from "./contracts";
+import type { CharacterId, GameContent, GameSetup } from "./contracts";
 
 const runtimes: ReturnType<typeof makeRuntime>[] = [];
-function makeRuntime(content: GameContent, seed: number) {
-  return ManagedRuntime.make(simulationLayer(content, { seed, playerName: "Player" }));
+function makeRuntime(content: GameContent, options: GameSetup) {
+  return ManagedRuntime.make(simulationLayer(content, { ...options, playerName: "Player" }));
 }
 afterEach(() => {
   for (const runtime of runtimes.splice(0)) Effect.runSync(runtime.disposeEffect);
 });
 
-function start(content = fixture(), seed = 42) {
-  const runtime = makeRuntime(content, seed);
+function start(content = fixture(), options = setup()) {
+  const runtime = makeRuntime(content, options);
   runtimes.push(runtime);
   const simulation = runtime.runSync(Simulation);
   return {
@@ -47,10 +47,7 @@ function advance(simulation: ReturnType<typeof start>, days: number) {
 
 test("starts a nobody with one influence and locks each founder's influence", () => {
   const content = fixture();
-  const simulation = start({
-    ...content,
-    world: { ...content.world, initialProjects: ["cleanup", "market"] },
-  });
+  const simulation = start(content, setup({ initialProjects: ["cleanup", "market"] }));
   const view = simulation.getView();
   expect(view.characters[0]).toMatchObject({
     reputation: 0,
@@ -285,32 +282,26 @@ test("different project deadlines remain independent", () => {
 
 test("NPCs commit before progress and cannot reuse newly released influence in the same day", () => {
   const content = fixture({ durationDays: 1, progressTarget: 1 });
-  const simulation = start({
-    ...content,
-    world: {
-      ...content.world,
-      npcCount: 1,
-      npcInfluence: [1, 1],
-      npcParticipationChance: 1,
-      npcSupportChance: 1,
-    },
-  });
+  const simulation = start(
+    content,
+    setup({
+      generation: { ...setup().generation, npcCount: 1, npcInfluence: [1, 1] },
+      ai: { participationChance: 1, supportChance: 1 },
+    }),
+  );
   create(simulation);
   create(simulation, "character:0", "market");
   advance(simulation, 1);
   expect(simulation.getView().projects.every((project) => project.commitments.length === 1)).toBe(
     true,
   );
-  const second = start({
-    ...content,
-    world: {
-      ...content.world,
-      npcCount: 1,
-      npcInfluence: [1, 1],
-      npcParticipationChance: 1,
-      npcSupportChance: 1,
-    },
-  });
+  const second = start(
+    content,
+    setup({
+      generation: { ...setup().generation, npcCount: 1, npcInfluence: [1, 1] },
+      ai: { participationChance: 1, supportChance: 1 },
+    }),
+  );
   create(second, "character:0");
   advance(second, 1);
   expect(second.getView().projects[0]!.commitments).toHaveLength(2);
@@ -321,12 +312,12 @@ test("NPCs commit before progress and cannot reuse newly released influence in t
 
 test("same seed and actions reproduce the world, including after entity recycling", () => {
   const content = fixture();
-  const populated = {
-    ...content,
-    world: { ...content.world, npcCount: 99, npcParticipationChance: 0.4 },
-  };
-  const first = start(populated);
-  const second = start(populated);
+  const options = setup({
+    generation: { ...setup().generation, npcCount: 99 },
+    ai: { ...setup().ai, participationChance: 0.4 },
+  });
+  const first = start(content, options);
+  const second = start(content, options);
   for (let iteration = 0; iteration < 12; iteration += 1) {
     create(first);
     create(second);
@@ -334,15 +325,21 @@ test("same seed and actions reproduce the world, including after entity recyclin
     advance(second, 3);
     expect(first.getView()).toEqual(second.getView());
   }
-  const different = start(populated, 43);
-  expect(different.getView().characters).not.toEqual(start(populated).getView().characters);
+  const different = start(content, { ...options, seed: 43 });
+  expect(different.getView().characters).not.toEqual(start(content, options).getView().characters);
 });
 
 test("cosmetic names do not change decisions or rewards", () => {
   const content = fixture();
-  const world = { ...content.world, npcCount: 10, npcParticipationChance: 0.5 };
-  const first = start({ ...content, world });
-  const second = start({ ...content, world: { ...world, firstNames: ["A", "B", "C"] } });
+  const options = setup({
+    generation: { ...setup().generation, npcCount: 10 },
+    ai: { ...setup().ai, participationChance: 0.5 },
+  });
+  const first = start(content, options);
+  const second = start(
+    { ...content, world: { ...content.world, firstNames: ["A", "B", "C"] } },
+    options,
+  );
   create(first);
   create(second);
   advance(first, 3);
@@ -365,6 +362,19 @@ test("exposed observations and supplied content cannot mutate the live world", (
   expect(simulation.getView().projects[0]!.progress).toBe(3);
 });
 
+test("the same authored content supports independent settings that are captured at session start", () => {
+  const content = fixture({ durationDays: 3, progressTarget: 100 });
+  const options = setup({ ai: { participationChance: 0, supportChance: 1 } });
+  const first = start(content, options);
+  const second = start(content, setup({ generation: { ...options.generation, npcCount: 0 } }));
+  expect(first.getView().characters).toHaveLength(4);
+  expect(second.getView().characters).toHaveLength(1);
+  create(first);
+  Object.assign(options.ai, { participationChance: 1 });
+  advance(first, 1);
+  expect(first.getView().projects[0]!.commitments).toHaveLength(1);
+});
+
 test("invalid authored content or an impossible initial supply fails explicitly", () => {
   expect(() => start(fixture({ durationDays: 0 }))).toThrow("duration");
   const content = fixture();
@@ -372,6 +382,9 @@ test("invalid authored content or an impossible initial supply fails explicitly"
     start({ ...content, projects: [content.projects[0]!, content.projects[0]!] }),
   ).toThrow("unique");
   expect(() =>
-    start({ ...content, world: { ...content.world, npcCount: 0, initialProjects: ["cleanup"] } }),
+    start(
+      content,
+      setup({ generation: { ...setup().generation, npcCount: 0 }, initialProjects: ["cleanup"] }),
+    ),
   ).toThrow("founder");
 });

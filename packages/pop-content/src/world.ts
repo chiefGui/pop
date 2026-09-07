@@ -1,12 +1,11 @@
-import type { WorldDefinition } from "@pop/simulation/contracts";
+import type { WorldContent } from "@pop/simulation/contracts";
 
-export const world: WorldDefinition = {
+export const world: WorldContent = {
   zone: {
     id: "zone:foundry",
     name: "Foundry District",
-    description: "An old working district. A hundred people with plans. You are new here.",
+    description: "An old working district. People with plans. You are new here.",
   },
-  npcCount: 99,
   firstNames: [
     "Mara",
     "Jonas",
@@ -42,17 +41,5 @@ export const world: WorldDefinition = {
     "Cross",
     "Rivera",
     "Stone",
-  ],
-  npcReputation: [30, 90],
-  npcPopularity: [30, 90],
-  npcInfluence: [1, 3],
-  npcParticipationChance: 0.12,
-  npcSupportChance: 0.68,
-  initialProjects: [
-    "streetlights",
-    "night-market",
-    "park-renovation",
-    "public-assembly",
-    "community-kitchen",
   ],
 };

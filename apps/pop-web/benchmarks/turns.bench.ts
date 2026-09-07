@@ -1,14 +1,19 @@
 import { Effect, ManagedRuntime } from "effect";
 import { Simulation, simulationLayer } from "@pop/simulation";
-import { gameContent } from "../src/index";
+import { gameContent } from "@pop/content";
+import { gameSetup } from "../src/game/setup";
 
 // Measures the Effect command + detached UI observation path, excluding rendering.
 for (const population of [100, 1000]) {
   const durations: number[] = [];
   for (let run = 0; run < 30; run += 1) {
-    const content = { ...gameContent, world: { ...gameContent.world, npcCount: population - 1 } };
     const runtime = ManagedRuntime.make(
-      simulationLayer(content, { seed: 20260906 + run, playerName: "Benchmark" }),
+      simulationLayer(gameContent, {
+        ...gameSetup,
+        generation: { ...gameSetup.generation, npcCount: population - 1 },
+        seed: gameSetup.seed + run,
+        playerName: "Benchmark",
+      }),
     );
     try {
       const simulation = runtime.runSync(Simulation);

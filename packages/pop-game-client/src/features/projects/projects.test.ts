@@ -5,7 +5,6 @@ import { createGameClient } from "../../client";
 function start() {
   const content = {
     ...gameContent,
-    world: { ...gameContent.world, npcCount: 0, initialProjects: [] },
     projects: [
       {
         ...gameContent.projects[0]!,
@@ -15,7 +14,12 @@ function start() {
       },
     ],
   };
-  const client = createGameClient(content, 42);
+  const client = createGameClient(content, {
+    seed: 42,
+    generation: { npcCount: 0, npcReputation: [0, 0], npcPopularity: [0, 0], npcInfluence: [1, 1] },
+    ai: { participationChance: 0, supportChance: 0.5 },
+    initialProjects: [],
+  });
   client.start("Ada");
   return client;
 }

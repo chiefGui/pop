@@ -1,9 +1,9 @@
-import type { GameContent } from "@pop/simulation";
+import type { GameContent, GameSetup } from "@pop/simulation";
 import { createSession } from "./session";
 import { createProjectsClient, resolutionFeedback } from "./features/projects/projects";
 
-export function createGameClient(content: GameContent, seed: number) {
-  const session = createSession(content, seed);
+export function createGameClient(content: GameContent, setup: GameSetup) {
+  const session = createSession(content, setup);
   return {
     start: session.start,
     dispose: session.dispose,

@@ -1,9 +1,10 @@
 import { expect, test } from "vite-plus/test";
 import { Effect } from "effect";
 import { Simulation, simulationLayer } from "@pop/simulation";
-import { gameContent } from "./index";
+import { gameContent } from "@pop/content";
+import { gameSetup } from "./setup";
 
-test("the authored opening takes a nobody from contribution to creating and resolving their first project", async () => {
+test("the configured opening takes a nobody from contribution to creating and resolving their first project", async () => {
   await Effect.runPromise(
     Effect.gen(function* () {
       const simulation = yield* Simulation;
@@ -34,8 +35,6 @@ test("the authored opening takes a nobody from contribution to creating and reso
       const final = yield* simulation.getView;
       expect(final.projects.find((project) => project.id === own.id)!.status).toBe("succeeded");
       expect(final.characters[0]!.availableInfluence).toBe(1);
-    }).pipe(
-      Effect.provide(simulationLayer(gameContent, { seed: 20260906, playerName: "Newcomer" })),
-    ),
+    }).pipe(Effect.provide(simulationLayer(gameContent, { ...gameSetup, playerName: "Newcomer" }))),
   );
 });

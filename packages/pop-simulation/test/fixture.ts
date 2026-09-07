@@ -1,4 +1,4 @@
-import type { GameContent, ProjectDefinition } from "../src/contracts";
+import type { GameContent, ProjectDefinition, GameSetup } from "../src/contracts";
 
 export function fixture(overrides: Partial<ProjectDefinition> = {}): GameContent {
   const project: ProjectDefinition = {
@@ -26,15 +26,23 @@ export function fixture(overrides: Partial<ProjectDefinition> = {}): GameContent
     projects: [project, { ...project, id: "market" }],
     world: {
       zone: { id: "zone:test", name: "Test", description: "Test zone" },
-      npcCount: 3,
       firstNames: ["Ada", "Leo"],
       lastNames: ["Vale", "Reed"],
+    },
+  };
+}
+
+export function setup(overrides: Partial<GameSetup> = {}): GameSetup {
+  return {
+    seed: 42,
+    generation: {
+      npcCount: 3,
       npcReputation: [20, 20],
       npcPopularity: [20, 20],
       npcInfluence: [3, 3],
-      npcParticipationChance: 0,
-      npcSupportChance: 0.5,
-      initialProjects: [],
     },
+    ai: { participationChance: 0, supportChance: 0.5 },
+    initialProjects: [],
+    ...overrides,
   };
 }

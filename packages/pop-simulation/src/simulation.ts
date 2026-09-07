@@ -5,7 +5,7 @@ import { ContentCatalog, SessionConfig } from "./config";
 import { createWorldState } from "./kernel/world";
 import { populateWorld } from "./features/world-generation/generate";
 import { createProjects } from "./features/projects/projects";
-import { InvalidCommand, InvalidContent, InvalidNpcDecision, SessionClosed } from "./errors";
+import { InvalidCommand, InvalidSessionOptions, InvalidNpcDecision, SessionClosed } from "./errors";
 import type { ActionRejected, CommandError } from "./errors";
 import { NpcPolicy } from "./features/ai/npc-policy";
 import { SimulationRandom } from "./random";
@@ -30,6 +30,13 @@ export class Simulation extends Context.Service<
     Effect.gen(function* () {
       const content = yield* ContentCatalog;
       const options = yield* SessionConfig;
+      const definitionIds = new Set(content.projects.map((project) => project.id));
+      for (const id of options.initialProjects) {
+        if (!definitionIds.has(id))
+          return yield* new InvalidSessionOptions({
+            message: `Unknown initial project type: ${id}.`,
+          });
+      }
       const random = yield* SimulationRandom;
       const policy = yield* NpcPolicy;
       const gate = yield* Semaphore.make(1);
@@ -75,10 +82,10 @@ export class Simulation extends Context.Service<
       }
 
       // Initialization uses the same action rules; partial setup is scoped and discarded on failure.
-      for (const definitionId of content.world.initialProjects) {
+      for (const definitionId of options.initialProjects) {
         const eligible = projects.eligibleFounders(definitionId, playerId);
         if (eligible.length === 0)
-          return yield* new InvalidContent({
+          return yield* new InvalidSessionOptions({
             message: `No eligible founder for initial project: ${definitionId}.`,
           });
         const action: ProjectAction = {
@@ -88,7 +95,7 @@ export class Simulation extends Context.Service<
           influence: 1,
         };
         const rejection = projects.checkAction(action);
-        if (rejection) return yield* new InvalidContent({ message: rejection.message });
+        if (rejection) return yield* new InvalidSessionOptions({ message: rejection.message });
         projects.applyAction(action);
       }
 

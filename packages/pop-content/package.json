@@ -8,8 +8,5 @@
   },
   "dependencies": {
     "@pop/simulation": "workspace:*"
-  },
-  "devDependencies": {
-    "effect": "4.0.0-rc.112"
   }
 }

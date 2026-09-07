@@ -27,6 +27,7 @@ export class SessionConfig extends Context.Service<SessionConfig, SessionOptions
       SessionConfig,
       decodeOptions(input).pipe(
         Effect.mapError((error) => new InvalidSessionOptions({ message: error.message })),
+        Effect.map((options) => structuredClone(options)),
       ),
     );
   }

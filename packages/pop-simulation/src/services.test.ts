@@ -3,9 +3,9 @@ import { Cause, Deferred, Effect, Exit, Fiber, Layer, ManagedRuntime, Result } f
 import { Simulation, simulationLayer } from "./simulation";
 import { SimulationRandom } from "./random";
 import { NpcPolicy } from "./features/ai/npc-policy";
-import { fixture } from "../test/fixture";
+import { fixture, setup } from "../test/fixture";
 
-const options = { seed: 42, playerName: "Player" };
+const options = { ...setup(), playerName: "Player" };
 
 test("malformed inputs are typed failures and never change world state", async () => {
   await Effect.runPromise(
@@ -60,13 +60,22 @@ test("content and session validation failures stay in the typed channel", async 
       success: { _tag: "InvalidContent" },
     });
   }
-  const exit = await Effect.runPromiseExit(
-    Simulation.pipe(Effect.provide(simulationLayer(fixture(), { ...options, seed: -1 }))),
-  );
-  expect(Exit.findError(exit)).toMatchObject({
-    _tag: "Success",
-    success: { _tag: "InvalidSessionOptions" },
-  });
+  for (const invalid of [
+    { ...options, seed: -1 },
+    { ...options, generation: { ...options.generation, npcCount: 0.5 } },
+    { ...options, generation: { ...options.generation, npcInfluence: [3, 1] } },
+    { ...options, ai: { ...options.ai, participationChance: 2 } },
+    { ...options, initialProjects: ["cleanup", "cleanup"] },
+    { ...options, initialProjects: ["missing"] },
+  ]) {
+    const exit = await Effect.runPromiseExit(
+      Simulation.pipe(Effect.provide(simulationLayer(fixture(), invalid))),
+    );
+    expect(Exit.findError(exit)).toMatchObject({
+      _tag: "Success",
+      success: { _tag: "InvalidSessionOptions" },
+    });
+  }
 });
 
 test("concurrent commitments cannot overspend and racing creators cannot duplicate a zone project", async () => {

@@ -8,8 +8,9 @@ import { StartScreen } from "./start-screen";
 import { CreationPanel, ProjectDetail } from "./project-panels";
 import { People } from "./people";
 import "./game.css";
+import { gameSetup } from "../../game/setup";
 
-const client = createGameClient(gameContent, 20260906);
+const client = createGameClient(gameContent, gameSetup);
 if (import.meta.hot) import.meta.hot.dispose(() => client.dispose());
 
 function District({

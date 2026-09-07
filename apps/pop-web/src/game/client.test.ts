@@ -1,10 +1,12 @@
 import { afterEach, expect, test } from "vite-plus/test";
 import { gameContent } from "@pop/content";
-import { createGameClient } from "./index";
+import { createGameClient } from "@pop/game-client";
+
+import { gameSetup } from "./setup";
 
 const clients: ReturnType<typeof createGameClient>[] = [];
 function makeClient(seed: number) {
-  const client = createGameClient(gameContent, seed);
+  const client = createGameClient(gameContent, { ...gameSetup, seed });
   clients.push(client);
   return client;
 }

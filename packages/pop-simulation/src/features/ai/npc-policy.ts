@@ -1,7 +1,7 @@
 import { Context, Effect, Layer } from "effect";
 import type { CommitAction, Side } from "../projects/model";
 import type { DecisionObservation } from "../projects/observation";
-import { ContentCatalog } from "../../config";
+import { SessionConfig } from "../../config";
 import { SimulationRandom } from "../../random";
 import { pick } from "../../kernel/random";
 
@@ -14,7 +14,7 @@ export class NpcPolicy extends Context.Service<
   static readonly layer = Layer.effect(
     NpcPolicy,
     Effect.gen(function* () {
-      const { world: config } = yield* ContentCatalog;
+      const { ai: config } = yield* SessionConfig;
       const { decisions } = yield* SimulationRandom;
       const decide = Effect.fn("NpcPolicy.decide")((observation: DecisionObservation) =>
         Effect.sync(() => {
@@ -22,10 +22,10 @@ export class NpcPolicy extends Context.Service<
           for (const character of observation.characters) {
             if (character.availableInfluence < 1) continue;
             const projects = observation.projectsByZone.get(character.zoneId);
-            if (!projects?.length || decisions() >= config.npcParticipationChance) continue;
+            if (!projects?.length || decisions() >= config.participationChance) continue;
             const project = pick(decisions, projects);
             let side: Side = "oppose";
-            if (decisions() < config.npcSupportChance) side = "support";
+            if (decisions() < config.supportChance) side = "support";
             const existing = project.sides.get(character.id);
             if (existing !== undefined) side = existing;
             actions.push({
