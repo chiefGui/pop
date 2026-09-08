@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import type { ProjectDefinition, Rewards } from "@pop/simulation";
+import type { ProjectDefinition, Rewards } from "@pop/game";
 import { Table, TableHeading, TableCell } from "../../ui/table";
 import { colors, fontSizes, fontWeights, breakpoints } from "../../ui/tokens.stylex";
 

@@ -1,0 +1,28 @@
+{
+  "name": "@pop/game",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#game/*": "./src/*.ts",
+    "#test/*": "./test/*.ts",
+    "#game/ai": "./src/ai/index.ts",
+    "#game/catalog": "./src/catalog/index.ts",
+    "#game/characters": "./src/characters/index.ts",
+    "#game/projects": "./src/projects/index.ts",
+    "#game/random": "./src/random/index.ts",
+    "#game/sessions": "./src/sessions/index.ts",
+    "#game/turns": "./src/turns/index.ts",
+    "#game/world": "./src/world/index.ts",
+    "#game/zones": "./src/zones/index.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./contracts": "./src/contracts.ts"
+  },
+  "dependencies": {
+    "@pop/engine": "workspace:*",
+    "bitecs": "0.4.0",
+    "effect": "4.0.0-rc.112"
+  }
+}

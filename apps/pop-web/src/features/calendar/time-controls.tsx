@@ -3,14 +3,22 @@ import { Button } from "../../ui/button";
 import { colors, fontSizes, fontWeights, breakpoints } from "../../ui/tokens.stylex";
 import { calendarDate } from "./calendar";
 
-export function TimeControls({ day, onAdvance }: { day: number; onAdvance: () => void }) {
+export function TimeControls({
+  day,
+  pending,
+  onAdvance,
+}: {
+  day: number;
+  pending: boolean;
+  onAdvance: () => void;
+}) {
   return (
     <div {...stylex.props(styles.control)}>
       <div {...stylex.props(styles.date)}>
         <strong {...stylex.props(styles.label)}>{calendarDate(day)}</strong>
         <span {...stylex.props(styles.day)}>Day {day + 1}</span>
       </div>
-      <Button xstyle={styles.advance} onClick={onAdvance}>
+      <Button disabled={pending} aria-busy={pending} xstyle={styles.advance} onClick={onAdvance}>
         Next day <span aria-hidden="true">→</span>
       </Button>
     </div>

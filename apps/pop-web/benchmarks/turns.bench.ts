@@ -1,5 +1,5 @@
 import { Effect, ManagedRuntime } from "effect";
-import { Simulation, simulationLayer } from "@pop/simulation";
+import { Simulation, simulationLayer } from "@pop/game";
 import { gameContent } from "@pop/content";
 import { gameSetup } from "../src/game/setup";
 

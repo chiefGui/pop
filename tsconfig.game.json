@@ -1,7 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "include": [
-    "packages/pop-simulation/**/*.ts",
+    "packages/pop-engine/**/*.ts",
+    "packages/pop-game/**/*.ts",
     "packages/pop-content/**/*.ts",
     "packages/pop-game-client/**/*.ts",
     "apps/pop-web/src/**/*.ts",

@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
-import { gameContent } from "@pop/content";
+
 import type { GameClient } from "@pop/game-client";
-import type { CharacterId, WorldView } from "@pop/simulation";
+import type { CharacterId, WorldView } from "@pop/game";
 import { AppShell, Header, SecondaryBar, Workspace } from "../ui/shell/app-shell";
 import { FeaturePanel } from "../ui/shell/feature-panel";
 import { FeatureStrip } from "../ui/shell/feature-strip";
@@ -59,7 +59,7 @@ export function Gameplay({
         <ProjectWorkspace
           client={client}
           board={board}
-          definitions={gameContent.projects}
+          definitions={client.getSnapshot().content!.projects}
           day={world.day}
           filter="active"
         />
@@ -77,7 +77,7 @@ export function Gameplay({
         <ProjectWorkspace
           client={client}
           board={board}
-          definitions={gameContent.projects}
+          definitions={client.getSnapshot().content!.projects}
           day={world.day}
           filter="resolved"
         />
@@ -118,7 +118,11 @@ export function Gameplay({
             controls={
               <>
                 {error && <Feedback error={error} />}
-                <TimeControls day={world.day} onAdvance={client.advanceDay} />
+                <TimeControls
+                  pending={client.getSnapshot().pending}
+                  day={world.day}
+                  onAdvance={client.advanceDay}
+                />
               </>
             }
           >

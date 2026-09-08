@@ -1,17 +1,22 @@
-import type { GameContent, GameSetup } from "@pop/simulation";
-import { createSession } from "./session";
-import { createProjectsClient, resolutionFeedback } from "./features/projects/projects";
+import type { Layer } from "effect";
+import type { NpcPolicy, SimulationRandom, GameContent, GameSetup } from "@pop/game";
+import { createSession } from "#client/sessions";
+import { createProjectsClient, resolutionFeedback } from "#client/projects";
 
-export function createGameClient(content: GameContent, setup: GameSetup) {
-  const session = createSession(content, setup);
+export function createGameClient(
+  content: GameContent,
+  setup: GameSetup,
+  policy?: Layer.Layer<NpcPolicy, never, SimulationRandom>,
+) {
+  const session = createSession(content, setup, policy);
   return {
     start: session.start,
     dispose: session.dispose,
     getSnapshot: session.getSnapshot,
     subscribe: session.subscribe,
-    projects: createProjectsClient(session, content.projects),
+    projects: createProjectsClient(session),
     advanceDay() {
-      session.execute({ type: "advance-day" }, resolutionFeedback);
+      return session.execute({ type: "advance-day" }, resolutionFeedback);
     },
   };
 }

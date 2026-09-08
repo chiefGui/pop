@@ -1,7 +1,7 @@
 import { useId, useState } from "react";
 import type { ReactNode } from "react";
 import type { GameClient, ProjectDetails } from "@pop/game-client";
-import type { CharacterView, ProjectDefinition, ProjectId } from "@pop/simulation";
+import type { CharacterView, ProjectDefinition, ProjectId } from "@pop/game";
 import * as stylex from "@stylexjs/stylex";
 import { calendarDate } from "../calendar/calendar";
 import { ProjectProgress, progressRate } from "./progress";
@@ -245,9 +245,9 @@ export function CreationPanel({
       <RewardTable definition={definition} />
       <form
         {...stylex.props(styles.form)}
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault();
-          const projectId = client.projects.create(definitionId, amount);
+          const projectId = await client.projects.create(definitionId, amount);
           if (projectId) onCreated(projectId);
         }}
       >
@@ -266,7 +266,11 @@ export function CreationPanel({
             onChange={(event) => setAmountInput(event.target.value)}
             aria-describedby={`creation-hint-${instanceId}`}
           />
-          <Button xstyle={styles.action} type="submit" disabled={Boolean(error)}>
+          <Button
+            xstyle={styles.action}
+            type="submit"
+            disabled={client.getSnapshot().pending || Boolean(error)}
+          >
             Start project
           </Button>
         </div>
@@ -390,7 +394,7 @@ export function ProjectDetail({
             />
             <Button
               xstyle={styles.action}
-              disabled={Boolean(supportError)}
+              disabled={client.getSnapshot().pending || Boolean(supportError)}
               onClick={() => client.projects.commit(project.id, "support", amount)}
             >
               Support
@@ -398,7 +402,7 @@ export function ProjectDetail({
             <Button
               variant="secondary"
               xstyle={styles.action}
-              disabled={Boolean(opposeError)}
+              disabled={client.getSnapshot().pending || Boolean(opposeError)}
               onClick={() => client.projects.commit(project.id, "oppose", amount)}
             >
               Oppose

@@ -1,4 +1,4 @@
-import type { GameSetup } from "@pop/simulation";
+import type { GameSetup } from "@pop/game";
 
 export const gameSetup: GameSetup = {
   seed: 20260906,

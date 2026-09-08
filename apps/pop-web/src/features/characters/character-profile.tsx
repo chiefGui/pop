@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import type { CharacterView } from "@pop/simulation";
+import type { CharacterView } from "@pop/game";
 import { Button } from "../../ui/button";
 import { FeaturePanel } from "../../ui/shell/feature-panel";
 import { colors, fontSizes, fontWeights } from "../../ui/tokens.stylex";

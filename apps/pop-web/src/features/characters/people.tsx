@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import { Table, TableHeading, TableCell } from "../../ui/table";
 import { Button } from "../../ui/button";
 import { colors, fontSizes, radii } from "../../ui/tokens.stylex";
-import type { CharacterId, WorldView } from "@pop/simulation";
+import type { CharacterId, WorldView } from "@pop/game";
 
 const styles = stylex.create({
   panel: { minWidth: 0 },

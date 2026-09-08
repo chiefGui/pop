@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useRef } from "react";
-import type { CharacterView } from "@pop/simulation";
+import type { CharacterView } from "@pop/game";
 import { Button } from "../../ui/button";
 import { breakpoints, colors, controls, fontSizes } from "../../ui/tokens.stylex";
 import { CharacterPortrait } from "./character-portrait";

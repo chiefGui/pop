@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "../../ui/button";
 import * as stylex from "@stylexjs/stylex";
 import type { GameClient, ProjectBoard } from "@pop/game-client";
-import type { ProjectDefinition, ProjectId } from "@pop/simulation";
+import type { ProjectDefinition, ProjectId } from "@pop/game";
 import { CreationPanel, ProjectDetail } from "./project-panels";
 import { ProjectProgress, progressRate } from "./progress";
 import { colors, fontSizes, fontWeights, controls } from "../../ui/tokens.stylex";

@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import type { WorldContent } from "@pop/simulation";
+import type { WorldContent } from "@pop/game";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/field";
 import { Feedback } from "../../ui/feedback";
@@ -140,7 +140,7 @@ export function StartScreen({
               maxLength={40}
               required
             />
-            <Button type="submit" disabled={!name.trim()}>
+            <Button type="submit" disabled={client.getSnapshot().pending || !name.trim()}>
               Enter the district <span aria-hidden="true">↗</span>
             </Button>
           </div>
