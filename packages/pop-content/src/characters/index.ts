@@ -1,1 +1,0 @@
-export { characterNames } from "./names";

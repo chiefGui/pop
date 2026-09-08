@@ -9,7 +9,9 @@ function start() {
   const world = createWorldState(content.world.zone);
   world.characters.add({
     id: "character:0",
-    name: "Ada",
+    givenName: "Ada",
+    familyName: "Vale",
+    birthDate: "1990-01-02",
     zoneId: world.zoneId,
     reputation: 20,
     popularity: 20,

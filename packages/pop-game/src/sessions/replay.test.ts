@@ -4,7 +4,7 @@ import { Effect, ManagedRuntime } from "effect";
 import { Simulation, simulationLayer } from "#game/sessions/session";
 import { fixture, setup } from "#test/fixture";
 
-test("retains the recorded random-policy outcomes across engine extraction", () => {
+test("reproduces recorded character identities and random-policy outcomes", () => {
   const fingerprints: string[] = [];
   for (const seed of [0, 42, 4294967295]) {
     const runtime = ManagedRuntime.make(
@@ -14,7 +14,7 @@ test("retains the recorded random-policy outcomes across engine extraction", () 
           ai: { participationChance: 0.6, supportChance: 0.55 },
           initialProjects: ["cleanup", "market"],
         }),
-        playerName: "Player",
+        player: { givenName: "Player", familyName: "Vale", birthDate: "1990-01-02" },
       }),
     );
     try {
@@ -31,9 +31,9 @@ test("retains the recorded random-policy outcomes across engine extraction", () 
   }
   expect(fingerprints).toMatchInlineSnapshot(`
     [
-      "d44b29e5cc554e3988910d15b95c47d34bd33c6009ea339bfefc7b7f59ef9dbb",
-      "56c7e166635e20fb860e8140b671e34b5114b9c857772715eaba905901aafead",
-      "e69e65f8b2f13bb4509424f650ffc03340161e18905c0c55110b285184b2455d",
+      "da6e827026d89731f5441c7eefa67cd65f41877f2fbce1c09a68cb9cc5fe368f",
+      "f06e07fac3ca4cf0be077031b85245ac957a91f9507e84ca5a1e708ebe1c6843",
+      "a55c048b20c28c64c0176e91c89f8ee2a14476da07d28091f178d4404114aab6",
     ]
   `);
 });

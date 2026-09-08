@@ -25,7 +25,7 @@ export function CharacterTrigger({
       ref={trigger}
       hidden={open}
       variant="secondary"
-      aria-label={`View ${character.name}`}
+      aria-label={`View ${character.displayName}`}
       aria-expanded={open}
       aria-controls="character-panel"
       onClick={onOpen}
@@ -34,7 +34,7 @@ export function CharacterTrigger({
       <span {...stylex.props(styles.portrait)}>
         <CharacterPortrait />
       </span>
-      <span {...stylex.props(styles.name)}>{character.name}</span>
+      <span {...stylex.props(styles.name)}>{character.displayName}</span>
     </Button>
   );
 }

@@ -1,12 +1,13 @@
 import { Context, Effect, Layer, Schema } from "effect";
 import { ProjectDefinitionId } from "#game/projects";
-import { GenerationSettings } from "#game/characters";
+import { CharacterIdentity } from "#game/characters";
+import { NpcGenerationSettings } from "#game/npc";
 import { NpcSettings } from "#game/ai";
 
 export const SessionOptions = Schema.Struct({
   seed: Schema.Int.check(Schema.isBetween({ minimum: 0, maximum: 0xffffffff })),
-  playerName: Schema.Trim.check(Schema.isMinLength(1), Schema.isMaxLength(40)),
-  generation: GenerationSettings,
+  player: CharacterIdentity,
+  generation: NpcGenerationSettings,
   ai: NpcSettings,
   initialProjects: Schema.Array(ProjectDefinitionId).check(
     Schema.makeFilter((ids) => {
@@ -15,7 +16,7 @@ export const SessionOptions = Schema.Struct({
   ),
 });
 export type SessionOptions = typeof SessionOptions.Type;
-export type GameSetup = Omit<SessionOptions, "playerName">;
+export type GameSetup = Omit<SessionOptions, "player">;
 
 export class InvalidSessionOptions extends Schema.TaggedError<InvalidSessionOptions>()(
   "InvalidSessionOptions",

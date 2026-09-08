@@ -3,6 +3,7 @@ import type { GameSetup } from "@pop/game";
 export const gameSetup: GameSetup = {
   seed: 20260906,
   generation: {
+    npcAge: [18, 80],
     npcCount: 99,
     npcReputation: [30, 90],
     npcPopularity: [30, 90],

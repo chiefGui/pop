@@ -12,7 +12,7 @@ for (const population of [100, 1000]) {
         ...gameSetup,
         generation: { ...gameSetup.generation, npcCount: population - 1 },
         seed: gameSetup.seed + run,
-        playerName: "Benchmark",
+        player: { givenName: "Benchmark", familyName: "Vale", birthDate: "1990-01-02" },
       }),
     );
     try {

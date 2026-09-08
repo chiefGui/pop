@@ -26,8 +26,8 @@ export function fixture(overrides: Partial<ProjectDefinition> = {}): GameContent
     projects: [project, { ...project, id: "market" }],
     world: {
       zone: { id: "zone:test", name: "Test", description: "Test zone" },
-      firstNames: ["Ada", "Leo"],
-      lastNames: ["Vale", "Reed"],
+      givenNames: ["Ada", "Leo"],
+      familyNames: ["Vale", "Reed"],
     },
   };
 }
@@ -36,6 +36,7 @@ export function setup(overrides: Partial<GameSetup> = {}): GameSetup {
   return {
     seed: 42,
     generation: {
+      npcAge: [18, 80],
       npcCount: 3,
       npcReputation: [20, 20],
       npcPopularity: [20, 20],

@@ -7,6 +7,7 @@ import type {
   Command,
   GameContent,
   GameSetup,
+  CharacterIdentity,
   WorldView,
 } from "@pop/game";
 
@@ -19,8 +20,13 @@ export interface GameSnapshot {
 }
 
 type Policy = Layer.Layer<NpcPolicy, never, SimulationRandom>;
-function makeRuntime(content: GameContent, setup: GameSetup, playerName: string, policy?: Policy) {
-  return ManagedRuntime.make(simulationLayer(content, { ...setup, playerName }, policy));
+function makeRuntime(
+  content: GameContent,
+  setup: GameSetup,
+  player: CharacterIdentity,
+  policy?: Policy,
+) {
+  return ManagedRuntime.make(simulationLayer(content, { ...setup, player }, policy));
 }
 type RunningSession = {
   readonly runtime: ReturnType<typeof makeRuntime>;
@@ -76,11 +82,11 @@ export function createSession(content: GameContent, setup: GameSetup, policy?: P
     publish({ ...snapshot, world, pending: false, error: null, message });
     return exit.value;
   }
-  async function start(name: string) {
+  async function start(player: CharacterIdentity) {
     if (session || closing) return;
     generation += 1;
     const active: RunningSession = {
-      runtime: makeRuntime(content, setup, name, policy),
+      runtime: makeRuntime(content, setup, player, policy),
       controller: new AbortController(),
     };
     session = active;

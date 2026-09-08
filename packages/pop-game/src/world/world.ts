@@ -4,6 +4,7 @@ import { createWorld, deleteWorld } from "bitecs";
 import { createCharacters } from "#game/characters";
 import { createZones } from "#game/zones";
 import type { Zone } from "#game/zones";
+import { ageOnDate, dateAtDay } from "#game/calendar";
 
 export function createWorldState(zone: Zone) {
   const ecs = createWorld();
@@ -21,14 +22,18 @@ export function createWorldState(zone: Zone) {
       projects: Pick<Projects, "getView" | "availableInfluence">,
     ): WorldView {
       const observed: CharacterView[] = [];
+      const date = dateAtDay(day);
       for (const character of characters.all())
         observed.push({
           ...character,
+          displayName: `${character.givenName} ${character.familyName}`,
+          age: ageOnDate(character.birthDate, date),
           availableInfluence: projects.availableInfluence(character),
           isPlayer: character.id === playerId,
         });
       return {
         day,
+        date,
         playerId,
         zone: { ...zones.get(zone.id)! },
         characters: observed,
@@ -44,6 +49,7 @@ export function createWorldState(zone: Zone) {
 }
 
 export interface WorldView {
+  readonly date: string;
   readonly day: number;
   readonly playerId: CharacterId;
   readonly zone: Zone;

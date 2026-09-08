@@ -1,5 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import type { WorldContent } from "@pop/game";
+import { gameStartDate } from "@pop/game";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/field";
 import { Feedback } from "../../ui/feedback";
@@ -40,7 +41,7 @@ const styles = stylex.create({
     marginTop: 0,
   },
   copyBreak: { display: { default: "inline", [breakpoints.upToCompact]: "none" } },
-  form: { marginTop: 38, maxWidth: 630 },
+  form: { display: "grid", gap: 16, marginTop: 38, maxWidth: 630 },
   label: {
     display: "block",
     fontSize: fontSizes.md,
@@ -52,7 +53,8 @@ const styles = stylex.create({
     gap: 10,
     flexDirection: { default: "row", [breakpoints.upToCompact]: "column" },
   },
-  input: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 },
+  field: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 },
+  input: { width: "100%" },
   steps: {
     display: "grid",
     gridTemplateColumns: "repeat(3, 1fr)",
@@ -101,10 +103,12 @@ export function StartScreen({
   error: string | null;
   zone: WorldContent["zone"];
 }) {
-  const [name, setName] = useState("");
+  const [givenName, setGivenName] = useState("");
+  const [familyName, setFamilyName] = useState("");
+  const [birthDate, setBirthDate] = useState("");
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    client.start(name);
+    void client.start({ givenName, familyName, birthDate });
   }
   return (
     <>
@@ -125,22 +129,63 @@ export function StartScreen({
           place to begin.
         </p>
         <form {...stylex.props(styles.form)} onSubmit={submit}>
-          <label {...stylex.props(styles.label)} htmlFor="character-name">
-            What’s your name?
-          </label>
           <div {...stylex.props(styles.inputRow)}>
+            <div {...stylex.props(styles.field)}>
+              <label {...stylex.props(styles.label)} htmlFor="given-name">
+                Given name
+              </label>
+              <Input
+                xstyle={styles.input}
+                id="given-name"
+                name="givenName"
+                autoComplete="off"
+                value={givenName}
+                onChange={(event) => setGivenName(event.target.value)}
+                maxLength={100}
+                required
+              />
+            </div>
+            <div {...stylex.props(styles.field)}>
+              <label {...stylex.props(styles.label)} htmlFor="family-name">
+                Family name
+              </label>
+              <Input
+                xstyle={styles.input}
+                id="family-name"
+                name="familyName"
+                autoComplete="off"
+                value={familyName}
+                onChange={(event) => setFamilyName(event.target.value)}
+                maxLength={100}
+                required
+              />
+            </div>
+          </div>
+          <div>
+            <label {...stylex.props(styles.label)} htmlFor="birth-date">
+              Birth date
+            </label>
             <Input
-              xstyle={styles.input}
-              id="character-name"
-              name="name"
-              autoComplete="off"
-              placeholder="Your character’s name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              maxLength={40}
+              id="birth-date"
+              name="birthDate"
+              type="date"
+              min="0001-01-01"
+              max={gameStartDate}
+              value={birthDate}
+              onChange={(event) => setBirthDate(event.target.value)}
               required
             />
-            <Button type="submit" disabled={client.getSnapshot().pending || !name.trim()}>
+          </div>
+          <div>
+            <Button
+              type="submit"
+              disabled={
+                client.getSnapshot().pending ||
+                !givenName.trim() ||
+                !familyName.trim() ||
+                !birthDate
+              }
+            >
               Enter the district <span aria-hidden="true">↗</span>
             </Button>
           </div>

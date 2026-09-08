@@ -1,6 +1,6 @@
 import { DateTime } from "effect";
+import { dateAtDay } from "@pop/game";
 
-const firstDay = DateTime.makeUnsafe("2026-01-01T00:00:00Z");
 const formatter = new Intl.DateTimeFormat("en", {
   day: "numeric",
   month: "short",
@@ -9,5 +9,9 @@ const formatter = new Intl.DateTimeFormat("en", {
 });
 
 export function calendarDate(day: number) {
-  return DateTime.formatIntl(DateTime.add(firstDay, { days: day }), formatter);
+  return formatCalendarDate(dateAtDay(day));
+}
+
+export function formatCalendarDate(date: string) {
+  return DateTime.formatIntl(DateTime.makeUnsafe(date + "T00:00:00Z"), formatter);
 }

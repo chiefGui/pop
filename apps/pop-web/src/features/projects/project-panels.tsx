@@ -342,7 +342,7 @@ export function ProjectDetail({
         {definition.name}
       </h2>
       <p {...stylex.props(styles.byline)}>
-        Led by <strong {...stylex.props(styles.creator)}>{creator.name}</strong>
+        Led by <strong {...stylex.props(styles.creator)}>{creator.displayName}</strong>
       </p>
       <p {...stylex.props(styles.description)}>{definition.description}</p>
       <div {...stylex.props(styles.progressHeading)}>
@@ -447,7 +447,7 @@ export function ProjectDetail({
             <tbody>
               {details.participants.map(({ commitment: entry, character }) => (
                 <tr key={entry.characterId}>
-                  <TableCell>{character.name}</TableCell>
+                  <TableCell>{character.displayName}</TableCell>
                   <TableCell>{entry.side}</TableCell>
                   <TableCell>{entry.influence}</TableCell>
                   <TableCell>{entry.influenceDays}</TableCell>
