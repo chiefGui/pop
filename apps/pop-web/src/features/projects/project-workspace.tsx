@@ -1,9 +1,11 @@
+import { useEffect, useRef, useState } from "react";
+import { Button } from "../../ui/button";
 import * as stylex from "@stylexjs/stylex";
 import type { GameClient, ProjectBoard } from "@pop/game-client";
-import type { ProjectDefinition, ProjectId } from "@pop/simulation";
+import type { ProjectDefinition, ProjectId } from "@pop/game";
 import { CreationPanel, ProjectDetail } from "./project-panels";
 import { ProjectProgress, progressRate } from "./progress";
-import { colors } from "../../ui/theme.stylex";
+import { colors, fontSizes, fontWeights, controls } from "../../ui/tokens.stylex";
 
 export function ProjectWorkspace({
   client,
@@ -11,70 +13,98 @@ export function ProjectWorkspace({
   definitions,
   day,
   filter,
-  selection,
-  onSelect,
 }: {
   client: GameClient;
   board: ProjectBoard;
   definitions: readonly ProjectDefinition[];
   day: number;
   filter: "active" | "resolved";
-  selection: ProjectId | "create";
-  onSelect: (id: ProjectId) => void;
 }) {
+  const [selection, onSelect] = useState<ProjectId | "create" | null>(null);
+  const navigation = useRef<HTMLButtonElement>(null);
+  const list = useRef<HTMLElement>(null);
+  const projectTrigger = useRef<HTMLButtonElement | null>(null);
   const listed = board[filter];
   let selected;
-  if (selection !== "create") selected = board.byId.get(selection);
+  if (selection && selection !== "create") selected = board.byId.get(selection);
+  const showingDetail = selection === "create" || Boolean(selected);
+  useEffect(() => {
+    if (showingDetail) {
+      navigation.current?.focus();
+    } else if (projectTrigger.current) {
+      if (projectTrigger.current.isConnected) projectTrigger.current.focus();
+      else list.current?.focus();
+    }
+  }, [selection, showingDetail]);
   return (
-    <main {...stylex.props(styles.workspace)}>
-      <aside {...stylex.props(styles.list)} aria-label="Projects">
-        <div {...stylex.props(styles.listHeading)}>
-          <span>{listed.length} projects</span>
-          {filter === "resolved" && <span>Recent outcomes</span>}
-        </div>
-        {listed.length === 0 && (
-          <div {...stylex.props(styles.empty)}>
-            {filter === "active" && "No active projects. Start one when you meet its requirements."}
-            {filter === "resolved" && "Outcomes will appear here as projects resolve."}
-          </div>
+    <>
+      <div hidden={showingDetail}>
+        {filter === "active" && (
+          <Button
+            variant="secondary"
+            onClick={(event) => {
+              projectTrigger.current = event.currentTarget;
+              onSelect("create");
+            }}
+          >
+            New project
+          </Button>
         )}
-        {listed.map(({ project, definition, ownCommitment }) => {
-          let timing = `${project.deadlineDay - day} days left`;
-          if (project.status === "succeeded") timing = "Succeeded";
-          if (project.status === "failed") timing = "Failed";
-          return (
-            <button
-              key={project.id}
-              {...stylex.props(styles.card, selection === project.id && styles.selected)}
-              aria-pressed={selection === project.id}
-              onClick={() => onSelect(project.id)}
-            >
-              <span {...stylex.props(styles.meta)}>
-                <span>{timing}</span>
-                {ownCommitment && (
-                  <span {...stylex.props(styles.mine)}>
-                    Your {ownCommitment.influence} influence
-                  </span>
-                )}
-              </span>
-              <strong {...stylex.props(styles.name)}>{definition.name}</strong>
-              <ProjectProgress
-                value={project.progress}
-                target={definition.progressTarget}
-                label={`${definition.name} progress`}
-              />
-              <span {...stylex.props(styles.meta, styles.progressMeta)}>
-                <span>
-                  {project.progress} / {definition.progressTarget}
+        <aside ref={list} tabIndex={-1} {...stylex.props(styles.list)} aria-label="Projects">
+          <div {...stylex.props(styles.listHeading)}>
+            <span>{listed.length} projects</span>
+          </div>
+          {listed.length === 0 && (
+            <div {...stylex.props(styles.empty)}>
+              {filter === "active" && "No active projects"}
+              {filter === "resolved" && "No resolved projects"}
+            </div>
+          )}
+          {listed.map(({ project, definition, ownCommitment }) => {
+            let timing = `${project.deadlineDay - day} days left`;
+            if (project.status === "succeeded") timing = "Succeeded";
+            if (project.status === "failed") timing = "Failed";
+            return (
+              <button
+                key={project.id}
+                {...stylex.props(styles.row)}
+                onClick={(event) => {
+                  projectTrigger.current = event.currentTarget;
+                  onSelect(project.id);
+                }}
+              >
+                <span {...stylex.props(styles.meta)}>
+                  <span>{timing}</span>
+                  {ownCommitment && (
+                    <span {...stylex.props(styles.mine)}>
+                      Your {ownCommitment.influence} influence
+                    </span>
+                  )}
                 </span>
-                {project.status === "active" && (
-                  <span>{progressRate(project.support - project.opposition)}</span>
-                )}
-              </span>
-            </button>
-          );
-        })}
-      </aside>
+                <strong {...stylex.props(styles.name)}>{definition.name}</strong>
+                <ProjectProgress
+                  value={project.progress}
+                  target={definition.progressTarget}
+                  label={`${definition.name} progress`}
+                />
+                <span {...stylex.props(styles.meta, styles.progressMeta)}>
+                  <span>
+                    {project.progress} / {definition.progressTarget}
+                  </span>
+                  {project.status === "active" && (
+                    <span>{progressRate(project.support - project.opposition)}</span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
+        </aside>
+      </div>
+      {showingDetail && (
+        <Button ref={navigation} variant="secondary" onClick={() => onSelect(null)}>
+          Back
+        </Button>
+      )}
       {selection === "create" && (
         <CreationPanel
           client={client}
@@ -83,7 +113,7 @@ export function ProjectWorkspace({
           onCreated={onSelect}
         />
       )}
-      {selection !== "create" && selected && (
+      {selected && (
         <ProjectDetail
           key={selected.project.id}
           client={client}
@@ -91,68 +121,61 @@ export function ProjectWorkspace({
           player={board.player}
         />
       )}
-      {selection !== "create" && !selected && (
-        <p {...stylex.props(styles.empty)}>Select a project to inspect it.</p>
-      )}
-    </main>
+    </>
   );
 }
 
 const styles = stylex.create({
-  workspace: {
-    display: { default: "grid", "@media (max-width: 680px)": "block" },
-    gridTemplateColumns: {
-      default: "minmax(230px, 0.85fr) minmax(0, 1.8fr)",
-      "@media (max-width: 900px)": "minmax(210px, 0.8fr) minmax(0, 1.5fr)",
-    },
-    alignItems: "start",
-  },
-  list: {
-    paddingBlock: { default: 20, "@media (max-width: 680px)": 18 },
-    paddingRight: { default: 22, "@media (max-width: 900px)": 16, "@media (max-width: 680px)": 0 },
-    maxHeight: { default: 780, "@media (max-width: 680px)": "none" },
-    overflowY: "auto",
-    overflowX: "auto",
-    scrollbarGutter: "stable",
-    display: { default: "block", "@media (max-width: 680px)": "flex" },
-    gap: 10,
-  },
+  list: { paddingTop: 16 },
   listHeading: {
-    display: { default: "flex", "@media (max-width: 680px)": "none" },
+    display: "flex",
     justifyContent: "space-between",
-    color: colors.muted,
-    fontSize: 10,
+    color: colors.textMuted,
+    fontSize: fontSizes.xs,
     marginBottom: 12,
   },
-  card: {
+  row: {
     display: "block",
     width: "100%",
-    padding: "18px 16px",
+    paddingBlock: "18px",
+    paddingInline: "16px",
     textAlign: "left",
-    marginBottom: { default: 10, "@media (max-width: 680px)": 0 },
-    backgroundColor: { default: "transparent", ":hover": "#edf0e7" },
-    border: `1px solid ${colors.line}`,
-    borderRadius: 6,
-    color: colors.ink,
-    font: "inherit",
+    backgroundColor: { default: "transparent", ":hover": colors.surfaceHover },
+    borderWidth: 0,
+    borderBottomWidth: { default: 1, ":last-child": 0 },
+    borderStyle: "solid",
+    borderColor: colors.border,
+    color: colors.text,
     cursor: "default",
-    flex: { default: "0 1 auto", "@media (max-width: 680px)": "0 0 225px" },
-    outline: { default: null, ":focus-visible": "2px solid #60856d" },
-    outlineOffset: 3,
+
+    outlineWidth: { default: 0, ":focus-visible": controls.focusWidth },
+    outlineStyle: "solid",
+    outlineColor: colors.borderFocus,
+    outlineOffset: controls.focusOffset,
   },
-  selected: {
-    backgroundColor: { default: "#edf1e6", ":hover": "#edf1e6" },
-    borderColor: "#81977c",
+  name: {
+    display: "block",
+    fontWeight: fontWeights.semibold,
+    fontSize: 15,
+    marginTop: "10px",
+    marginRight: "0",
+    marginBottom: "14px",
+    marginLeft: "0",
   },
-  name: { display: "block", fontWeight: 600, fontSize: 15, margin: "10px 0 14px" },
   meta: {
     display: "flex",
     justifyContent: "space-between",
     gap: 8,
-    color: colors.muted,
-    fontSize: 10,
+    color: colors.textMuted,
+    fontSize: fontSizes.xs,
   },
   progressMeta: { marginTop: 9 },
-  mine: { color: colors.green },
-  empty: { padding: "30px 10px", fontSize: 12, color: colors.muted, margin: 0 },
+  mine: { color: colors.textAccent },
+  empty: {
+    paddingBlock: "30px",
+    paddingInline: "10px",
+    fontSize: fontSizes.md,
+    color: colors.textMuted,
+    margin: 0,
+  },
 });

@@ -3,11 +3,16 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "imports": {
+    "#client/sessions": "./src/sessions/index.ts",
+    "#client/projects": "./src/projects/index.ts",
+    "#client/*": "./src/*.ts"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@pop/simulation": "workspace:*",
+    "@pop/game": "workspace:*",
     "effect": "4.0.0-rc.112"
   },
   "devDependencies": {

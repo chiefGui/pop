@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import { colors } from "./theme.stylex";
+import { colors, fontSizes } from "./tokens.stylex";
 
 export function Feedback({ error, message = "" }: { error: string | null; message?: string }) {
   return (
@@ -13,6 +13,12 @@ export function Feedback({ error, message = "" }: { error: string | null; messag
 }
 
 const styles = stylex.create({
-  feedback: { minHeight: 44, padding: "12px 0", fontSize: 12, color: colors.muted },
-  error: { color: colors.error },
+  feedback: {
+    minHeight: 44,
+    paddingBlock: "12px",
+    paddingInline: "0",
+    fontSize: fontSizes.md,
+    color: colors.textMuted,
+  },
+  error: { color: colors.textError },
 });

@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import type { ComponentProps } from "react";
-import { colors } from "./theme.stylex";
+import { colors, radii, controls } from "./tokens.stylex";
 
 export function Input({
   xstyle,
@@ -18,15 +18,19 @@ export function Select({
 
 const styles = stylex.create({
   field: {
-    font: "inherit",
-    color: colors.ink,
-    border: "1px solid #b9c2b7",
-    borderRadius: 6,
-    backgroundColor: colors.paper,
-    padding: "11px 13px",
-    minHeight: 44,
-    outline: { default: null, ":focus-visible": "2px solid #60856d" },
-    outlineOffset: 3,
+    color: colors.text,
+    borderWidth: 1,
+    borderStyle: "solid",
+    borderColor: colors.borderControl,
+    borderRadius: radii.md,
+    backgroundColor: colors.surface,
+    paddingBlock: "11px",
+    paddingInline: "13px",
+    minHeight: controls.minHeight,
+    outlineWidth: { default: 0, ":focus-visible": controls.focusWidth },
+    outlineStyle: "solid",
+    outlineColor: colors.borderFocus,
+    outlineOffset: controls.focusOffset,
   },
   select: { width: "100%" },
 });

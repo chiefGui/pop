@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import type { ComponentProps } from "react";
-import { colors } from "./theme.stylex";
+import { colors, fontWeights, radii, controls } from "./tokens.stylex";
 
 export function Button({
   variant = "primary",
@@ -19,25 +19,31 @@ const styles = stylex.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 20,
-    border: "1px solid transparent",
-    borderRadius: 6,
-    padding: "11px 18px",
-    minHeight: 44,
-    font: "inherit",
-    fontWeight: 600,
+    borderWidth: 1,
+    borderStyle: "solid",
+    borderColor: "transparent",
+    borderRadius: radii.md,
+    paddingBlock: "11px",
+    paddingInline: "18px",
+    minHeight: controls.minHeight,
+    fontWeight: fontWeights.semibold,
     whiteSpace: "nowrap",
     cursor: "default",
-    opacity: { default: 1, ":disabled": 0.43 },
-    outline: { default: null, ":focus-visible": "2px solid #60856d" },
-    outlineOffset: 3,
+    opacity: { default: 1, ":disabled": controls.disabledOpacity },
+    outlineWidth: { default: 0, ":focus-visible": controls.focusWidth },
+    outlineStyle: "solid",
+    outlineColor: colors.borderFocus,
+    outlineOffset: controls.focusOffset,
   },
   primary: {
-    color: "#fff",
-    backgroundColor: { default: colors.green, ":hover:not(:disabled)": "#244333" },
+    color: colors.textOnAction,
+    backgroundColor: {
+      default: colors.surfaceAction,
+      ":hover:not(:disabled)": colors.surfaceActionHover,
+    },
   },
   secondary: {
-    color: colors.green,
-    borderColor: "#bbc7bb",
-    backgroundColor: { default: "transparent", ":hover:not(:disabled)": "#e9eee4" },
+    color: { default: colors.textMuted, ":hover:not(:disabled)": colors.text },
+    backgroundColor: { default: "transparent", ":hover:not(:disabled)": colors.surfaceHover },
   },
 });

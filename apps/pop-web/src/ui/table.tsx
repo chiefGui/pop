@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import type { ComponentProps } from "react";
-import { colors } from "./theme.stylex";
+import { colors, fontSizes, fontWeights } from "./tokens.stylex";
 
 export function Table(props: Omit<ComponentProps<"table">, "className" | "style">) {
   return <table {...props} {...stylex.props(styles.table)} />;
@@ -21,12 +21,19 @@ export function TableCell({
 }
 
 const styles = stylex.create({
-  table: { width: "100%", borderCollapse: "collapse", fontSize: 11, textAlign: "left" },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+    fontSize: fontSizes.sm,
+    textAlign: "left",
+  },
   cell: {
     paddingBlock: 11,
     paddingRight: 9,
     paddingLeft: { default: 9, ":first-child": 0 },
-    borderBottom: `1px solid ${colors.line}`,
+    borderBottomWidth: 1,
+    borderBottomStyle: "solid",
+    borderBottomColor: colors.border,
   },
-  heading: { fontWeight: 550 },
+  heading: { fontWeight: fontWeights.medium },
 });

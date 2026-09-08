@@ -11,17 +11,19 @@
   "dependencies": {
     "@pop/content": "workspace:*",
     "@pop/contracts": "workspace:*",
+    "@pop/game": "workspace:*",
     "@pop/game-client": "workspace:*",
-    "@pop/simulation": "workspace:*",
     "@stylexjs/stylex": "0.19.0",
     "@tanstack/react-query": "5.102.8",
     "@tanstack/react-router": "1.170.32",
     "effect": "4.0.0-rc.112",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "tailwindcss": "4.3.3"
   },
   "devDependencies": {
     "@stylexjs/unplugin": "0.19.0",
+    "@tailwindcss/vite": "4.3.3",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
     "@vitejs/plugin-react": "6.1.1",

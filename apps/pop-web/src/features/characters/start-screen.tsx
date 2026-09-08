@@ -1,64 +1,95 @@
 import * as stylex from "@stylexjs/stylex";
-import type { WorldContent } from "@pop/simulation";
+import type { WorldContent } from "@pop/game";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/field";
 import { Feedback } from "../../ui/feedback";
 import { typography } from "../../ui/typography";
-import { colors } from "../../ui/theme.stylex";
+import { colors, fontSizes, fontWeights, breakpoints } from "../../ui/tokens.stylex";
 import { calendarDate } from "../calendar/calendar";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import type { GameClient } from "@pop/game-client";
 
 const styles = stylex.create({
-  brand: { display: "flex", alignItems: "center", gap: 28, color: colors.muted, fontSize: 12 },
+  brand: {
+    display: "flex",
+    alignItems: "center",
+    gap: 28,
+    color: colors.textMuted,
+    fontSize: fontSizes.md,
+  },
   main: {
     width: "100%",
     maxWidth: 820,
-    marginTop: { default: 80, "@media (max-width: 680px)": 60 },
+    marginTop: { default: 80, [breakpoints.upToCompact]: 60 },
     marginInline: "auto",
     marginBottom: 40,
   },
   heading: {
     fontSize: "clamp(44px, 6vw, 76px)",
-    fontWeight: 540,
+    fontWeight: fontWeights.medium,
     lineHeight: 1.05,
-    letterSpacing: { default: "-3.5px", "@media (max-width: 680px)": "-2px" },
-    margin: "24px 0",
+    letterSpacing: { default: "-3.5px", [breakpoints.upToCompact]: "-2px" },
+    marginBlock: "24px",
+    marginInline: "0",
   },
   copy: {
-    fontSize: { default: 16, "@media (max-width: 680px)": 14 },
+    fontSize: { default: fontSizes.xxl, [breakpoints.upToCompact]: fontSizes.xl },
     lineHeight: 1.8,
-    color: colors.muted,
+    color: colors.textMuted,
     marginTop: 0,
   },
-  copyBreak: { display: { default: "inline", "@media (max-width: 680px)": "none" } },
+  copyBreak: { display: { default: "inline", [breakpoints.upToCompact]: "none" } },
   form: { marginTop: 38, maxWidth: 630 },
-  label: { display: "block", fontSize: 12, fontWeight: 600, marginBottom: 10 },
+  label: {
+    display: "block",
+    fontSize: fontSizes.md,
+    fontWeight: fontWeights.semibold,
+    marginBottom: 10,
+  },
   inputRow: {
     display: "flex",
     gap: 10,
-    flexDirection: { default: "row", "@media (max-width: 680px)": "column" },
+    flexDirection: { default: "row", [breakpoints.upToCompact]: "column" },
   },
-  input: { flex: 1, minWidth: 0 },
+  input: { flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0 },
   steps: {
     display: "grid",
     gridTemplateColumns: "repeat(3, 1fr)",
-    gap: { default: 32, "@media (max-width: 680px)": 15 },
+    gap: { default: 32, [breakpoints.upToCompact]: 15 },
     listStyle: "none",
-    margin: "36px 0 0",
-    padding: "28px 0 0",
-    borderTop: `1px solid ${colors.line}`,
+    marginTop: "36px",
+    marginRight: "0",
+    marginBottom: "0",
+    marginLeft: "0",
+    paddingTop: "28px",
+    paddingRight: "0",
+    paddingBottom: "0",
+    paddingLeft: "0",
+    borderTopWidth: 1,
+    borderTopStyle: "solid",
+    borderTopColor: colors.border,
   },
-  stepNumber: { display: "block", color: "#7b8b77", fontSize: 11, marginBottom: 10 },
-  stepHeading: { fontWeight: 600, fontSize: { default: 14, "@media (max-width: 680px)": 12 } },
+  stepNumber: {
+    display: "block",
+    color: colors.textSubtle,
+    fontSize: fontSizes.sm,
+    marginBottom: 10,
+  },
+  stepHeading: {
+    fontWeight: fontWeights.semibold,
+    fontSize: { default: fontSizes.xl, [breakpoints.upToCompact]: fontSizes.md },
+  },
   stepCopy: {
-    margin: "8px 0 0",
-    color: colors.muted,
-    fontSize: { default: 12, "@media (max-width: 680px)": 11 },
+    marginTop: "8px",
+    marginRight: "0",
+    marginBottom: "0",
+    marginLeft: "0",
+    color: colors.textMuted,
+    fontSize: { default: fontSizes.md, [breakpoints.upToCompact]: fontSizes.sm },
     maxWidth: 220,
   },
-  footer: { marginTop: "auto", fontSize: 11, color: colors.muted },
+  footer: { marginTop: "auto", fontSize: fontSizes.sm, color: colors.textMuted },
 });
 
 export function StartScreen({
@@ -109,7 +140,7 @@ export function StartScreen({
               maxLength={40}
               required
             />
-            <Button type="submit" disabled={!name.trim()}>
+            <Button type="submit" disabled={client.getSnapshot().pending || !name.trim()}>
               Enter the district <span aria-hidden="true">↗</span>
             </Button>
           </div>

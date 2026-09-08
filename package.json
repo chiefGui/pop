@@ -21,11 +21,12 @@
     "format": "vp fmt",
     "test": "vp test run",
     "test:smoke": "node scripts/smoke.ts",
-    "test:game": "vp test run packages/pop-simulation packages/pop-game-client apps/pop-web/src/game",
-    "typecheck:game": "tsc --project tsconfig.game.json",
+    "test:game": "vp test run packages/pop-engine packages/pop-game packages/pop-game-client apps/pop-web/src/game",
+    "typecheck:game": "tsc --project packages/pop-engine/tsconfig.json && tsc --project tsconfig.game.json",
     "benchmark": "bun scripts/benchmark.ts"
   },
   "devDependencies": {
+    "@stylexjs/eslint-plugin": "0.19.0",
     "@types/node": "26.4.1",
     "playwright-core": "1.63.0",
     "typescript": "7.0.2",

@@ -1,28 +1,31 @@
 import * as stylex from "@stylexjs/stylex";
-import { colors } from "./theme.stylex";
+import { colors, fontSizes, fontWeights } from "./tokens.stylex";
 
 export const typography = stylex.create({
   wordmark: {
     fontSize: 36,
-    fontWeight: 850,
+    fontWeight: fontWeights.black,
     letterSpacing: "-2px",
     lineHeight: 1,
-    color: colors.ink,
+    color: colors.text,
   },
   eyebrow: {
     display: "block",
-    fontSize: 10,
-    fontWeight: 650,
+    fontSize: fontSizes.xs,
+    fontWeight: fontWeights.bold,
     textTransform: "uppercase",
     letterSpacing: "1.7px",
-    color: colors.muted,
+    color: colors.textMuted,
   },
   heading: {
     fontSize: 28,
-    fontWeight: 570,
+    fontWeight: fontWeights.medium,
     lineHeight: 1.2,
     letterSpacing: "-1px",
-    margin: "0 0 10px",
+    marginTop: "0",
+    marginRight: "0",
+    marginBottom: "10px",
+    marginLeft: "0",
   },
-  muted: { color: colors.muted },
+  muted: { color: colors.textMuted },
 });

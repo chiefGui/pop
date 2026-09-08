@@ -1,0 +1,18 @@
+{
+  "name": "@pop/engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#engine/*": "./src/*.ts",
+    "#engine/ai": "./src/ai/index.ts",
+    "#engine/random": "./src/random/index.ts",
+    "#engine/sessions": "./src/sessions/index.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "effect": "4.0.0-rc.112"
+  }
+}

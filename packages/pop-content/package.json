@@ -3,10 +3,15 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "imports": {
+    "#content/characters": "./src/characters/index.ts",
+    "#content/zones": "./src/zones/index.ts",
+    "#content/projects": "./src/projects/index.ts"
+  },
   "exports": {
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@pop/simulation": "workspace:*"
+    "@pop/game": "workspace:*"
   }
 }

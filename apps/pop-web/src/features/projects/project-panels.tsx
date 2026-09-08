@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { ReactNode } from "react";
 import type { GameClient, ProjectDetails } from "@pop/game-client";
-import type { CharacterView, ProjectDefinition, ProjectId } from "@pop/simulation";
+import type { CharacterView, ProjectDefinition, ProjectId } from "@pop/game";
 import * as stylex from "@stylexjs/stylex";
 import { calendarDate } from "../calendar/calendar";
 import { ProjectProgress, progressRate } from "./progress";
@@ -10,42 +10,51 @@ import { Button } from "../../ui/button";
 import { Input, Select } from "../../ui/field";
 import { Table, TableHeading, TableCell } from "../../ui/table";
 import { typography } from "../../ui/typography";
-import { colors } from "../../ui/theme.stylex";
+import {
+  colors,
+  fontSizes,
+  fontWeights,
+  radii,
+  controls,
+  breakpoints,
+} from "../../ui/tokens.stylex";
 
 const styles = stylex.create({
-  panel: {
-    paddingTop: { default: 28, "@media (max-width: 680px)": 24 },
-    paddingBottom: { default: 30, "@media (max-width: 680px)": 24 },
-    paddingLeft: { default: 30, "@media (max-width: 900px)": 20, "@media (max-width: 680px)": 0 },
-    borderLeft: { default: `1px solid ${colors.line}`, "@media (max-width: 680px)": "none" },
-    borderTop: { default: "none", "@media (max-width: 680px)": `1px solid ${colors.line}` },
-    minHeight: 620,
+  panel: { paddingTop: 20 },
+  heading: { fontSize: { default: 28, [breakpoints.upToCompact]: 26 } },
+  fieldLabel: {
+    display: "block",
+    marginTop: "26px",
+    marginRight: "0",
+    marginBottom: "8px",
+    marginLeft: "0",
+    fontSize: fontSizes.md,
   },
-  heading: { fontSize: { default: 28, "@media (max-width: 680px)": 26 } },
-  intro: { marginTop: 0, color: colors.muted },
-  fieldLabel: { display: "block", margin: "26px 0 8px", fontSize: 12 },
   description: {
-    color: colors.muted,
+    color: colors.textMuted,
     lineHeight: 1.75,
     maxWidth: 580,
-    fontSize: 13,
-    margin: "18px 0 24px",
+    fontSize: fontSizes.lg,
+    marginTop: "18px",
+    marginRight: "0",
+    marginBottom: "24px",
+    marginLeft: "0",
   },
-  requirements: { backgroundColor: "#edf0e7", borderRadius: 5, padding: 15 },
+  requirements: { backgroundColor: colors.surfaceSubtle, borderRadius: radii.sm, padding: 15 },
   requirement: {
     display: "flex",
     justifyContent: "space-between",
     gap: 16,
     marginBottom: 9,
-    fontSize: 12,
+    fontSize: fontSizes.md,
   },
-  requirementNote: { color: colors.muted, fontSize: 10, margin: "14px 0 0" },
   facts: {
     display: "flex",
+    flexWrap: "wrap",
     justifyContent: "space-between",
     gap: 12,
-    color: colors.muted,
-    fontSize: 11,
+    color: colors.textMuted,
+    fontSize: fontSizes.sm,
     marginTop: 10,
   },
   form: { marginTop: 24 },
@@ -53,46 +62,68 @@ const styles = stylex.create({
     display: "flex",
     justifyContent: "space-between",
     gap: 12,
-    fontSize: 12,
-    fontWeight: 550,
+    fontSize: fontSizes.md,
+    fontWeight: fontWeights.medium,
     marginBottom: 9,
   },
-  secondaryLabel: { color: colors.muted, fontSize: 11, fontWeight: 400 },
-  actions: { display: "flex", gap: 10 },
+  secondaryLabel: {
+    color: colors.textMuted,
+    fontSize: fontSizes.sm,
+    fontWeight: fontWeights.regular,
+  },
+  actions: { display: "flex", flexWrap: "wrap", gap: 10 },
   amount: { width: 76 },
-  action: { flex: 1 },
-  hint: { color: colors.muted, fontSize: 11, minHeight: 36, margin: "10px 0 0" },
+  action: { flexGrow: 1, flexShrink: 1, flexBasis: 0 },
+  hint: {
+    color: colors.textMuted,
+    fontSize: fontSizes.sm,
+    minHeight: 36,
+    marginTop: "10px",
+    marginRight: "0",
+    marginBottom: "0",
+    marginLeft: "0",
+  },
   commitment: {
     display: "flex",
     flexDirection: "column",
     gap: 4,
-    padding: "13px 15px",
-    backgroundColor: "#eaf0e3",
-    borderRadius: 5,
+    paddingBlock: "13px",
+    paddingInline: "15px",
+    backgroundColor: colors.surfaceSubtle,
+    borderRadius: radii.sm,
     marginBottom: 20,
-    fontSize: 12,
+    fontSize: fontSizes.md,
   },
-  emphasis: { fontWeight: 550 },
+  emphasis: { fontWeight: fontWeights.medium },
   kicker: {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     gap: 12,
-    fontSize: 10,
-    color: colors.muted,
+    fontSize: fontSizes.xs,
+    color: colors.textMuted,
     marginBottom: 18,
   },
   status: {
     display: "inline-block",
-    fontWeight: 600,
-    color: colors.green,
-    backgroundColor: "#e8eddf",
-    padding: "4px 8px",
-    borderRadius: 3,
+    fontWeight: fontWeights.semibold,
+    color: colors.textAccent,
+    backgroundColor: colors.surfaceSubtle,
+    paddingBlock: "4px",
+    paddingInline: "8px",
+    borderRadius: radii.xs,
   },
-  failed: { backgroundColor: "#efe7dd", color: "#79593d" },
-  byline: { color: colors.muted, fontSize: 12, margin: "0 0 22px" },
-  creator: { fontWeight: 550, color: colors.ink },
+  succeeded: { backgroundColor: colors.surfacePositive, color: colors.textPositive },
+  failed: { backgroundColor: colors.surfaceNegative, color: colors.textNegative },
+  byline: {
+    color: colors.textMuted,
+    fontSize: fontSizes.md,
+    marginTop: "0",
+    marginRight: "0",
+    marginBottom: "22px",
+    marginLeft: "0",
+  },
+  creator: { fontWeight: fontWeights.medium, color: colors.text },
   progressHeading: {
     display: "flex",
     justifyContent: "space-between",
@@ -100,25 +131,37 @@ const styles = stylex.create({
     alignItems: "baseline",
     marginBottom: 10,
   },
-  progressValue: { fontSize: 22, fontWeight: 600 },
-  progressTarget: { fontSize: 12, color: colors.muted, fontWeight: 400 },
-  rate: { fontSize: 12, color: colors.green },
-  note: { color: colors.muted, fontSize: 11, lineHeight: 1.6, margin: "12px 0 20px" },
+  progressValue: { fontSize: 22, fontWeight: fontWeights.semibold },
+  progressTarget: {
+    fontSize: fontSizes.md,
+    color: colors.textMuted,
+    fontWeight: fontWeights.regular,
+  },
+  rate: { fontSize: fontSizes.md, color: colors.textAccent },
   resolution: {
-    backgroundColor: "#eaf0e3",
-    borderRadius: 5,
+    backgroundColor: colors.surfaceSubtle,
+    borderRadius: radii.sm,
     padding: 16,
     marginTop: 20,
-    fontSize: 12,
+    fontSize: fontSizes.md,
   },
-  payout: { margin: "6px 0 0" },
-  participants: { borderTop: `1px solid ${colors.line}`, marginTop: 20, paddingTop: 16 },
+  payout: { marginTop: "6px", marginRight: "0", marginBottom: "0", marginLeft: "0" },
+  participants: {
+    borderTopWidth: 1,
+    borderTopStyle: "solid",
+    borderTopColor: colors.border,
+    marginTop: 20,
+    paddingTop: 16,
+  },
   summary: {
-    fontSize: 12,
-    color: colors.muted,
-    padding: "4px 0",
-    outline: { default: null, ":focus-visible": "2px solid #60856d" },
-    outlineOffset: 3,
+    fontSize: fontSizes.md,
+    color: colors.textMuted,
+    paddingBlock: "4px",
+    paddingInline: "0",
+    outlineWidth: { default: 0, ":focus-visible": controls.focusWidth },
+    outlineStyle: "solid",
+    outlineColor: colors.borderFocus,
+    outlineOffset: controls.focusOffset,
   },
   count: { float: "right" },
   participantsScroll: { overflow: "auto", maxHeight: 260, marginTop: 10 },
@@ -135,6 +178,7 @@ export function CreationPanel({
   player: CharacterView;
   onCreated: (projectId: ProjectId) => void;
 }) {
+  const instanceId = useId();
   const [definitionId, setDefinitionId] = useState(
     () =>
       projects.find((entry) => !client.projects.checkCreation(entry.id, 1))?.id ??
@@ -146,8 +190,11 @@ export function CreationPanel({
   const definition = projects.find((entry) => entry.id === definitionId);
   if (!definition) {
     return (
-      <section {...stylex.props(styles.panel)} aria-labelledby="creation-heading">
-        <h2 {...stylex.props(typography.heading, styles.heading)} id="creation-heading">
+      <section {...stylex.props(styles.panel)} aria-labelledby={`creation-heading-${instanceId}`}>
+        <h2
+          {...stylex.props(typography.heading, styles.heading)}
+          id={`creation-heading-${instanceId}`}
+        >
           No project types available
         </h2>
       </section>
@@ -155,17 +202,18 @@ export function CreationPanel({
   }
   const error = client.projects.checkCreation(definitionId, amount);
   return (
-    <section {...stylex.props(styles.panel)} aria-labelledby="creation-heading">
-      <div {...stylex.props(typography.eyebrow)}>Your next step</div>
-      <h2 {...stylex.props(typography.heading, styles.heading)} id="creation-heading">
-        Put your name on it.
+    <section {...stylex.props(styles.panel)} aria-labelledby={`creation-heading-${instanceId}`}>
+      <h2
+        {...stylex.props(typography.heading, styles.heading)}
+        id={`creation-heading-${instanceId}`}
+      >
+        New project
       </h2>
-      <p {...stylex.props(styles.intro)}>Lead a project. Build the support to see it through.</p>
-      <label {...stylex.props(styles.fieldLabel)} htmlFor="project-type">
+      <label {...stylex.props(styles.fieldLabel)} htmlFor={`project-type-${instanceId}`}>
         Project
       </label>
       <Select
-        id="project-type"
+        id={`project-type-${instanceId}`}
         value={definitionId}
         onChange={(event) => setDefinitionId(event.target.value)}
       >
@@ -189,9 +237,6 @@ export function CreationPanel({
             {player.popularity} / {definition.requirements.popularity}
           </strong>
         </div>
-        <p {...stylex.props(styles.requirementNote)}>
-          Requirements unlock access. These resources are not spent.
-        </p>
       </div>
       <div {...stylex.props(styles.facts)}>
         <span>{definition.progressTarget} progress to succeed</span>
@@ -200,33 +245,37 @@ export function CreationPanel({
       <RewardTable definition={definition} />
       <form
         {...stylex.props(styles.form)}
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault();
-          const projectId = client.projects.create(definitionId, amount);
+          const projectId = await client.projects.create(definitionId, amount);
           if (projectId) onCreated(projectId);
         }}
       >
-        <label {...stylex.props(styles.label)} htmlFor="founding-influence">
+        <label {...stylex.props(styles.label)} htmlFor={`founding-influence-${instanceId}`}>
           Founding influence
         </label>
         <div {...stylex.props(styles.actions)}>
           <Input
             xstyle={styles.amount}
-            id="founding-influence"
+            id={`founding-influence-${instanceId}`}
             type="number"
             min={1}
             max={player.availableInfluence}
             step={1}
             value={amountInput}
             onChange={(event) => setAmountInput(event.target.value)}
-            aria-describedby="creation-hint"
+            aria-describedby={`creation-hint-${instanceId}`}
           />
-          <Button xstyle={styles.action} type="submit" disabled={Boolean(error)}>
+          <Button
+            xstyle={styles.action}
+            type="submit"
+            disabled={client.getSnapshot().pending || Boolean(error)}
+          >
             Start project
           </Button>
         </div>
-        <p {...stylex.props(styles.hint)} id="creation-hint">
-          {error || "Your influence supports the project and returns when it resolves."}
+        <p {...stylex.props(styles.hint)} id={`creation-hint-${instanceId}`}>
+          {error || "Influence returns at resolution."}
         </p>
       </form>
     </section>
@@ -242,15 +291,15 @@ export function ProjectDetail({
   details: ProjectDetails;
   player: CharacterView;
 }) {
+  const instanceId = useId();
   const [amountInput, setAmountInput] = useState("1");
   const amount = Number(amountInput);
   const { project, definition, creator, ownCommitment: own } = details;
   const supportError = client.projects.checkCommitment(project.id, "support", amount);
   const opposeError = client.projects.checkCommitment(project.id, "oppose", amount);
-  let actionHint = "Choose a side. You can add influence, but cannot withdraw or switch sides.";
+  let actionHint = "Influence locked until resolution.";
   if (supportError && opposeError) actionHint = supportError;
-  if (player.availableInfluence === 0)
-    actionHint = "Your influence is committed. Advance days to resolve projects and recover it.";
+  if (player.availableInfluence === 0) actionHint = "No influence available.";
   let ownShare: ReactNode;
   if (own) {
     let share = "Share starts accruing next day";
@@ -273,14 +322,23 @@ export function ProjectDetail({
   if (project.status === "succeeded") status = "Succeeded";
   if (project.status === "failed") status = "Failed";
   return (
-    <section {...stylex.props(styles.panel)} aria-labelledby="project-heading">
+    <section {...stylex.props(styles.panel)} aria-labelledby={`project-heading-${instanceId}`}>
       <div {...stylex.props(styles.kicker)}>
-        <span {...stylex.props(styles.status, project.status === "failed" && styles.failed)}>
+        <span
+          {...stylex.props(
+            styles.status,
+            project.status === "succeeded" && styles.succeeded,
+            project.status === "failed" && styles.failed,
+          )}
+        >
           {status}
         </span>
         <span>Started {calendarDate(project.startedDay)}</span>
       </div>
-      <h2 {...stylex.props(typography.heading, styles.heading)} id="project-heading">
+      <h2
+        {...stylex.props(typography.heading, styles.heading)}
+        id={`project-heading-${instanceId}`}
+      >
         {definition.name}
       </h2>
       <p {...stylex.props(styles.byline)}>
@@ -312,21 +370,11 @@ export function ProjectDetail({
         </span>
         <span>Deadline {calendarDate(project.deadlineDay)}</span>
       </div>
-      {project.status === "active" && (
-        <p {...stylex.props(styles.note)}>
-          Net support changes progress each day. Reach {definition.progressTarget} by the deadline
-          to succeed.
-        </p>
-      )}
       <RewardTable definition={definition} />
-      <p {...stylex.props(styles.note)}>
-        Each side shares its pool by influence × days committed. The creator earns an additional
-        bonus.
-      </p>
       {ownShare}
       {project.status === "active" && (
         <div {...stylex.props(styles.form)}>
-          <label {...stylex.props(styles.label)} htmlFor="commit-influence">
+          <label {...stylex.props(styles.label)} htmlFor={`commit-influence-${instanceId}`}>
             Influence to commit{" "}
             <span {...stylex.props(styles.secondaryLabel)}>
               {player.availableInfluence} available
@@ -335,18 +383,18 @@ export function ProjectDetail({
           <div {...stylex.props(styles.actions)}>
             <Input
               xstyle={styles.amount}
-              id="commit-influence"
+              id={`commit-influence-${instanceId}`}
               type="number"
               min={1}
               max={player.availableInfluence}
               step={1}
               value={amountInput}
               onChange={(event) => setAmountInput(event.target.value)}
-              aria-describedby="commitment-hint"
+              aria-describedby={`commitment-hint-${instanceId}`}
             />
             <Button
               xstyle={styles.action}
-              disabled={Boolean(supportError)}
+              disabled={client.getSnapshot().pending || Boolean(supportError)}
               onClick={() => client.projects.commit(project.id, "support", amount)}
             >
               Support
@@ -354,13 +402,13 @@ export function ProjectDetail({
             <Button
               variant="secondary"
               xstyle={styles.action}
-              disabled={Boolean(opposeError)}
+              disabled={client.getSnapshot().pending || Boolean(opposeError)}
               onClick={() => client.projects.commit(project.id, "oppose", amount)}
             >
               Oppose
             </Button>
           </div>
-          <p {...stylex.props(styles.hint)} id="commitment-hint">
+          <p {...stylex.props(styles.hint)} id={`commitment-hint-${instanceId}`}>
             {actionHint}
           </p>
         </div>

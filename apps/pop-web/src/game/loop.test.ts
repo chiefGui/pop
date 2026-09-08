@@ -1,6 +1,6 @@
 import { expect, test } from "vite-plus/test";
 import { Effect } from "effect";
-import { Simulation, simulationLayer } from "@pop/simulation";
+import { Simulation, simulationLayer } from "@pop/game";
 import { gameContent } from "@pop/content";
 import { gameSetup } from "./setup";
 
