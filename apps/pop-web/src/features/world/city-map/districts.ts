@@ -1,6 +1,5 @@
 export type CityDistrict = { readonly id: string; readonly name: string; readonly locked: boolean };
 
-// Frontend presentation data; stable IDs match the geometry asset.
 export const cityDistricts: readonly CityDistrict[] = [
   { id: "northwood", name: "Northwood", locked: true },
   { id: "the-heights", name: "The Heights", locked: true },

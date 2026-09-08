@@ -33,7 +33,10 @@ test("the city asset loads offline with 15 beveled districts and valid geometry"
     expect(object.material.color.getHex()).toBe(0xffffff);
   });
   const update = bindDistrictAppearance(asset.scene);
+  expect(() => update([])).toThrow("Missing district");
+  expect(asset.scene.visible).toBe(false);
   update(cityDistricts);
+  expect(asset.scene.visible).toBe(true);
   const faceColors = () => {
     const result = new Map<string, number>();
     for (const district of city.children) {

@@ -8,6 +8,7 @@ import {
   Scene,
   SRGBColorSpace,
   WebGLRenderer,
+  Vector2,
 } from "three";
 import type { Material, Object3D } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -62,7 +63,7 @@ export function mountCityMap(
   let frame = 0;
   let model: Object3D | undefined;
   let releasePaper: (() => void) | undefined;
-  let ready = false;
+  const viewportSize = new Vector2();
   let districts = initialDistricts;
   let applyAppearance: ((districts: readonly CityDistrict[]) => void) | undefined;
 
@@ -72,7 +73,7 @@ export function mountCityMap(
     if (!applyAppearance) return;
     try {
       applyAppearance(next);
-      if (ready && !renderer.getContext().isContextLost()) report(null);
+      if (!renderer.getContext().isContextLost()) report(null);
       scheduleDraw();
     } catch (cause) {
       console.error("Could not update district appearance", cause);
@@ -87,8 +88,14 @@ export function mountCityMap(
     const height = canvas.clientHeight;
     if (width === 0 || height === 0) return;
     try {
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-      renderer.setSize(width, height, false);
+      const pixelRatio = Math.min(window.devicePixelRatio, 2);
+      renderer.getSize(viewportSize);
+      if (
+        viewportSize.x !== width ||
+        viewportSize.y !== height ||
+        renderer.getPixelRatio() !== pixelRatio
+      )
+        renderer.setDrawingBufferSize(width, height, pixelRatio);
       fitMapCamera(camera, bounds, width, height);
       renderer.render(scene, camera);
     } catch (cause) {
@@ -105,13 +112,12 @@ export function mountCityMap(
     report("Map graphics were interrupted. Waiting for recovery, or retry the map.");
   }
   function restored() {
-    if (ready) report(null);
+    updateDistricts(districts);
     scheduleDraw();
   }
 
   async function load() {
     try {
-      // A separate bundled asset module also works under Electron's file:// origin.
       const { default: dataUrl } = await import("./assets/city-map.glb?inline");
       if (disposed) return;
       const marker = ";base64,";
@@ -127,13 +133,10 @@ export function mountCityMap(
       }
       model = asset.scene;
       applyAppearance = bindDistrictAppearance(model);
-      applyAppearance(districts);
       releasePaper = applyMapMaterials(model, renderer.capabilities.getMaxAnisotropy());
       scene.add(model);
       bounds.setFromObject(model);
-      ready = true;
-      if (!renderer.getContext().isContextLost()) report(null);
-      scheduleDraw();
+      updateDistricts(districts);
     } catch (cause) {
       if (disposed) return;
       if (model) {

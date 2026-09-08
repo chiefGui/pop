@@ -2,7 +2,6 @@ import { Color, Mesh, MeshStandardMaterial } from "three";
 import type { Object3D } from "three";
 import type { CityDistrict } from "./districts";
 
-// Shared access-state palette. District identity never determines its color.
 const palette = {
   locked: {
     face: new Color("#363538"),
@@ -36,13 +35,13 @@ export function bindDistrictAppearance(model: Object3D) {
         materials.push(copy);
         return copy;
       }
-      // GLTF can deduplicate neutral materials. Each district must own its colors.
       if (Array.isArray(object.material)) object.material = object.material.map(clone);
       else object.material = clone(object.material);
     });
     districtMaterials.set(district.name, materials);
   }
   for (const material of originals) material.dispose();
+  model.visible = false;
 
   return (districts: readonly CityDistrict[]) => {
     const appearances = new Map<string, typeof palette.locked>();
@@ -57,7 +56,6 @@ export function bindDistrictAppearance(model: Object3D) {
     }
     if (appearances.size !== districtMaterials.size)
       throw new Error("Missing district appearance data.");
-    // Validate the entire update before changing any visible materials.
     for (const [id, materials] of districtMaterials) {
       const appearance = appearances.get(id)!;
       for (const material of materials) {
@@ -66,5 +64,6 @@ export function bindDistrictAppearance(model: Object3D) {
         else material.color.copy(appearance.face);
       }
     }
+    model.visible = true;
   };
 }

@@ -1,8 +1,5 @@
 export type Point = readonly [number, number];
-type Boundary = { from: string; to: string; points: readonly Point[] };
 
-// Original city plan in drawing coordinates. Junctions and shared boundaries are
-// authored once; adjacent districts traverse the same boundary in reverse.
 const junctions: Record<string, Point> = {
   a0: [190, 115],
   a1: [325, 115],
@@ -37,12 +34,11 @@ function junction(id: string): Point {
   return point;
 }
 
-const boundaries = new Map<string, Boundary>();
+const boundaries = new Map<string, readonly Point[]>();
 function boundary(from: string, to: string, bends: readonly Point[] = []) {
-  boundaries.set(`${from}:${to}`, { from, to, points: [junction(from), ...bends, junction(to)] });
+  boundaries.set(`${from}:${to}`, [junction(from), ...bends, junction(to)]);
 }
 
-// Surveyed outer limits interrupted by a small estuary along the southern edge.
 boundary("a0", "a1");
 boundary("a1", "a2", [
   [395, 115],
@@ -124,7 +120,6 @@ boundary("c1", "d1", [
   [310, 430],
   [345, 430],
 ]);
-// A single winding watercourse explains the less regular central boundaries.
 boundary("a2", "b2", [
   [492, 153],
   [480, 180],
@@ -192,12 +187,12 @@ function ring(nodes: string[]): Point[] {
     const to = nodes[(index + 1) % nodes.length]!;
     const forward = boundaries.get(`${from}:${to}`);
     if (forward) {
-      points.push(...forward.points.slice(0, -1));
+      points.push(...forward.slice(0, -1));
       continue;
     }
     const reverse = boundaries.get(`${to}:${from}`);
     if (!reverse) throw new Error(`Missing city boundary: ${from}:${to}`);
-    points.push(...reverse.points.toReversed().slice(0, -1));
+    points.push(...reverse.toReversed().slice(0, -1));
   }
   return points;
 }

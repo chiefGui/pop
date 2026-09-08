@@ -17,3 +17,5 @@ The source of truth is `apps/pop-web/scripts/city-map/geography.ts`: an original
 Changing names or access states does not require running the generator. The renderer retains the loaded geometry and applies colors to independent district materials, including the paper edge tint. Invalid updates report an error and leave the previous palette intact; corrected data can be applied without reloading. Regenerate only for changes to boundaries, bevel geometry or the set of geometry IDs.
 
 The shared access palette lives in `../map-appearance.ts`: locked districts use charcoal and unlocked districts use muted oxblood. Foundry starts unlocked; the other districts start locked. Face, bevel and side colors update together when access changes.
+
+The generator provides the binary FileReader interface required by Three.js's GLTF exporter in Node. At runtime, shared GLTF materials are cloned per district so access updates cannot recolor neighbors. The model remains hidden until its first valid district update; invalid initial data can be corrected without loading the asset again.

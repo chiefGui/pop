@@ -4,7 +4,6 @@ import { GLTFExporter } from "three/addons/exporters/GLTFExporter.js";
 import { createRegionGeometry } from "./geometry.ts";
 import districts from "./geography.ts";
 
-// GLTFExporter's binary writer uses the browser FileReader interface for Blob conversion.
 class BinaryFileReader {
   result: ArrayBuffer | null = null;
   onloadend: (() => void) | null = null;

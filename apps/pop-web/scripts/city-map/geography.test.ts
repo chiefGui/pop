@@ -41,7 +41,6 @@ test("15 original districts tile the city with exactly shared internal edges", (
       expect(edges.get(key(b, a))).toBe(1);
     }
   }
-  // Shared segments and junctions are allowed; proper crossings are not.
   for (let i = 0; i < segments.length; i++) {
     const [a, b] = segments[i]!;
     for (const [c, d] of segments.slice(i + 1)) {
