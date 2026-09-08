@@ -6,7 +6,12 @@ import type { CharacterId, GameContent, GameSetup } from "#game/contracts";
 
 const runtimes: ReturnType<typeof makeRuntime>[] = [];
 function makeRuntime(content: GameContent, options: GameSetup) {
-  return ManagedRuntime.make(simulationLayer(content, { ...options, playerName: "Player" }));
+  return ManagedRuntime.make(
+    simulationLayer(content, {
+      ...options,
+      player: { givenName: "Player", familyName: "Vale", birthDate: "1990-01-02" },
+    }),
+  );
 }
 afterEach(() => {
   for (const runtime of runtimes.splice(0)) Effect.runSync(runtime.disposeEffect);
@@ -68,6 +73,56 @@ test("starts a nobody with one influence and locks each founder's influence", ()
       0,
     ),
   ).toBe(2);
+});
+
+test("character views derive names and ages from identity and simulation time", () => {
+  const simulation = start();
+  const before = simulation.getView();
+  expect(before.date).toBe("2026-01-01");
+  expect(before.characters[0]).toMatchObject({
+    givenName: "Player",
+    familyName: "Vale",
+    displayName: "Player Vale",
+    birthDate: "1990-01-02",
+    age: 35,
+  });
+  advance(simulation, 1);
+  const after = simulation.getView();
+  expect(after.date).toBe("2026-01-02");
+  expect(after.characters[0]).toMatchObject({ birthDate: "1990-01-02", age: 36 });
+  expect(before.characters[0]!.age).toBe(35);
+});
+
+test("NPC birth dates reproduce with the seed and respect inclusive starting-age ranges", () => {
+  for (const range of [
+    [0, 0],
+    [18, 80],
+    [120, 120],
+  ] as const) {
+    const options = setup({ generation: { ...setup().generation, npcCount: 100, npcAge: range } });
+    const first = start(fixture(), options).getView().characters.slice(1);
+    const second = start(fixture(), options).getView().characters.slice(1);
+    expect(first).toEqual(second);
+    for (const character of first) {
+      expect(character.age).toBeGreaterThanOrEqual(range[0]);
+      expect(character.age).toBeLessThanOrEqual(range[1]);
+      expect(character.birthDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+    expect(new Set(first.map((character) => character.birthDate)).size).toBeGreaterThan(1);
+  }
+});
+
+test("changing generated ages preserves names, resources, and initial projects", () => {
+  const options = setup({ initialProjects: ["cleanup"] });
+  const first = start(fixture(), options).getView();
+  const second = start(fixture(), {
+    ...options,
+    generation: { ...options.generation, npcAge: [70, 80] },
+  }).getView();
+  const withoutAge = (view: typeof first) =>
+    view.characters.map(({ birthDate: _birthDate, age: _age, ...character }) => character);
+  expect(withoutAge(first)).toEqual(withoutAge(second));
+  expect(first.projects).toEqual(second.projects);
 });
 
 test("rejects invalid commitments without changing state", () => {
@@ -337,7 +392,7 @@ test("cosmetic names do not change decisions or rewards", () => {
   });
   const first = start(content, options);
   const second = start(
-    { ...content, world: { ...content.world, firstNames: ["A", "B", "C"] } },
+    { ...content, world: { ...content.world, givenNames: ["A", "B", "C"] } },
     options,
   );
   create(first);

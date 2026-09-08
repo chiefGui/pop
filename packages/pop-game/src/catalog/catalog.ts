@@ -1,11 +1,11 @@
 import { Context, Effect, Layer, Schema } from "effect";
 import { ProjectDefinition } from "#game/projects";
-import { CharacterNames } from "#game/characters";
+import { NpcNames } from "#game/npc";
 import { Zone } from "#game/zones";
 
 export const WorldContent = Schema.Struct({
   zone: Zone,
-  ...CharacterNames.fields,
+  ...NpcNames.fields,
 });
 export type WorldContent = typeof WorldContent.Type;
 

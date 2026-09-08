@@ -16,11 +16,17 @@ async function start() {
   };
   const client = createGameClient(content, {
     seed: 42,
-    generation: { npcCount: 0, npcReputation: [0, 0], npcPopularity: [0, 0], npcInfluence: [1, 1] },
+    generation: {
+      npcAge: [18, 80],
+      npcCount: 0,
+      npcReputation: [0, 0],
+      npcPopularity: [0, 0],
+      npcInfluence: [1, 1],
+    },
     ai: { participationChance: 0, supportChance: 0.5 },
     initialProjects: [],
   });
-  await client.start("Ada");
+  await client.start({ givenName: "Ada", familyName: "Vale", birthDate: "1990-01-02" });
   return client;
 }
 
@@ -34,8 +40,8 @@ test("creation returns its identity and observations follow participation throug
     expect(board.active).toHaveLength(1);
     expect(board.byId.get(projectId)).toMatchObject({
       definition: { id: "street-cleanup" },
-      creator: { name: "Ada" },
-      participants: [{ character: { name: "Ada" }, commitment: { influence: 1 } }],
+      creator: { displayName: "Ada Vale" },
+      participants: [{ character: { displayName: "Ada Vale" }, commitment: { influence: 1 } }],
       ownCommitment: { influenceDays: 0 },
       ownShare: undefined,
     });
@@ -70,9 +76,9 @@ test("rejections keep the same observation and disposal clears feature views bef
     await client.dispose();
     expect(client.projects.getView()).toBeUndefined();
     expect(client.projects.checkCreation("street-cleanup", 1)).toContain("Create your character");
-    await client.start("Bea");
+    await client.start({ givenName: "Bea", familyName: "Vale", birthDate: "1990-01-02" });
     expect(client.projects.getView()!.active).toHaveLength(0);
-    expect(client.projects.getView()!.player.name).toBe("Bea");
+    expect(client.projects.getView()!.player.displayName).toBe("Bea Vale");
   } finally {
     await client.dispose();
   }

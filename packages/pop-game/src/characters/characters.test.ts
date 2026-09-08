@@ -8,18 +8,22 @@ test("character storage preserves prior observations and rejects duplicate ident
   try {
     const character = {
       id: "character:0" as const,
-      name: "Ada",
+      givenName: "Ada",
+      familyName: "Vale",
+      birthDate: "1990-01-02",
       zoneId: "zone:test" as const,
       reputation: 20,
       popularity: 20,
       influence: 3,
     };
     characters.add(character);
-    character.name = "Changed outside storage";
+    character.givenName = "Changed outside storage";
     const before = characters.get("character:0")!;
-    expect(before.name).toBe("Ada");
+    expect(before.givenName).toBe("Ada");
     expect(Object.isFrozen(before)).toBe(true);
-    expect(() => characters.add({ ...before, name: "Replacement" })).toThrow("Duplicate character");
+    expect(() => characters.add({ ...before, givenName: "Replacement" })).toThrow(
+      "Duplicate character",
+    );
     characters.grantStanding(before.id, { reputation: 2, popularity: 3 });
     expect(before.reputation).toBe(20);
     expect(characters.get(before.id)).toMatchObject({ reputation: 22, popularity: 23 });

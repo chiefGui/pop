@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "imports": {
-    "#content/characters": "./src/characters/index.ts",
+    "#content/npc": "./src/npc/index.ts",
     "#content/zones": "./src/zones/index.ts",
     "#content/projects": "./src/projects/index.ts"
   },

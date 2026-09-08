@@ -5,7 +5,10 @@ import { SimulationRandom } from "#game/random";
 import { NpcPolicy } from "#game/ai";
 import { fixture, setup } from "#test/fixture";
 
-const options = { ...setup(), playerName: "Player" };
+const options = {
+  ...setup(),
+  player: { givenName: "Player", familyName: "Vale", birthDate: "1990-01-02" },
+};
 
 test("malformed inputs are typed failures and never change world state", async () => {
   await Effect.runPromise(
@@ -62,6 +65,14 @@ test("content and session validation failures stay in the typed channel", async 
   }
   for (const invalid of [
     { ...options, seed: -1 },
+    { ...options, player: { ...options.player, givenName: " " } },
+    { ...options, player: { ...options.player, familyName: " " } },
+    { ...options, player: { ...options.player, birthDate: "2025-02-29" } },
+    { ...options, player: { ...options.player, birthDate: "2026-01-02" } },
+    { ...options, generation: { ...options.generation, npcAge: [80, 18] } },
+    { ...options, generation: { ...options.generation, npcAge: [-1, 80] } },
+    { ...options, generation: { ...options.generation, npcAge: [18, 121] } },
+    { ...options, generation: { ...options.generation, npcAge: [18.5, 80] } },
     { ...options, generation: { ...options.generation, npcCount: 0.5 } },
     { ...options, generation: { ...options.generation, npcInfluence: [3, 1] } },
     { ...options, ai: { ...options.ai, participationChance: 2 } },

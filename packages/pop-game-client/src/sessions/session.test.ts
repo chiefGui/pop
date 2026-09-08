@@ -7,6 +7,7 @@ import { createGameClient } from "#client/client";
 const setup = {
   seed: 42,
   generation: {
+    npcAge: [18, 80] as const,
     npcCount: 1,
     npcReputation: [0, 0] as const,
     npcPopularity: [0, 0] as const,
@@ -27,12 +28,12 @@ test("async decisions publish pending immediately, reject duplicate turns, and l
     Layer.succeed(NpcPolicy, { decide: () => Effect.promise(() => wait).pipe(Effect.as([])) }),
   );
   try {
-    await client.start("Ada");
+    await client.start({ givenName: "Ada", familyName: "Vale", birthDate: "1990-01-02" });
     const before = client.getSnapshot().world;
     const turn = client.advanceDay();
     expect(client.getSnapshot().pending).toBe(true);
     expect(client.getSnapshot().world).toBe(before);
-    expect(client.projects.getView()!.player.name).toBe("Ada");
+    expect(client.projects.getView()!.player.displayName).toBe("Ada Vale");
     expect(await client.advanceDay()).toBeUndefined();
     release();
     await turn;
@@ -50,14 +51,14 @@ test("disposal interrupts a waiting policy and stale results cannot overwrite a 
     Layer.succeed(NpcPolicy, { decide: () => Effect.promise(() => new Promise<never>(() => {})) }),
   );
   try {
-    await client.start("Ada");
+    await client.start({ givenName: "Ada", familyName: "Vale", birthDate: "1990-01-02" });
     const turn = client.advanceDay();
     await client.dispose();
-    await client.start("Bea");
+    await client.start({ givenName: "Bea", familyName: "Vale", birthDate: "1990-01-02" });
     await turn;
     expect(client.getSnapshot()).toMatchObject({
       pending: false,
-      world: { day: 0, characters: [{ name: "Bea" }, {}] },
+      world: { day: 0, characters: [{ displayName: "Bea Vale" }, {}] },
     });
   } finally {
     await client.dispose();
@@ -72,7 +73,7 @@ test("client views use the session catalog even if the original authored object 
   const content = { ...gameContent, projects };
   const client = createGameClient(content, setup);
   try {
-    await client.start("Ada");
+    await client.start({ givenName: "Ada", familyName: "Vale", birthDate: "1990-01-02" });
     const originalName = projects[0]!.name;
     projects[0]!.name = "Changed outside the session";
     projects[0]!.requirements.reputation = 999;
@@ -86,22 +87,26 @@ test("client views use the session catalog even if the original authored object 
 
 test("shutdown listeners cannot start a session or dispose it twice while cleanup is pending", async () => {
   const client = createGameClient(gameContent, setup);
-  await client.start("Ada");
+  await client.start({ givenName: "Ada", familyName: "Vale", birthDate: "1990-01-02" });
   let nested: Promise<void> | undefined;
   let observed = false;
   const unsubscribe = client.subscribe(() => {
     if (observed || !client.getSnapshot().pending || client.getSnapshot().world) return;
     observed = true;
     nested = client.dispose();
-    void client.start("Interrupted cleanup");
+    void client.start({
+      givenName: "Interrupted cleanup",
+      familyName: "Vale",
+      birthDate: "1990-01-02",
+    });
   });
   try {
     const closing = client.dispose();
     expect(nested).toBe(closing);
     await closing;
     expect(client.getSnapshot()).toMatchObject({ world: null, pending: false });
-    await client.start("Bea");
-    expect(client.getSnapshot().world!.characters[0]!.name).toBe("Bea");
+    await client.start({ givenName: "Bea", familyName: "Vale", birthDate: "1990-01-02" });
+    expect(client.getSnapshot().world!.characters[0]!.displayName).toBe("Bea Vale");
   } finally {
     unsubscribe();
     await client.dispose();
