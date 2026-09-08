@@ -9,6 +9,7 @@ import "./global.css";
 
 const styles = stylex.create({
   document: {
+    colorScheme: "dark",
     fontFamily: fonts.body,
     color: colors.text,
     backgroundColor: colors.surfaceCanvas,

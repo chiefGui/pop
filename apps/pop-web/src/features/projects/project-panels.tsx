@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import type { ReactNode } from "react";
 import type { GameClient, ProjectDetails } from "@pop/game-client";
 import type { CharacterView, ProjectDefinition, ProjectId } from "@pop/simulation";
@@ -20,20 +20,8 @@ import {
 } from "../../ui/tokens.stylex";
 
 const styles = stylex.create({
-  panel: {
-    paddingTop: { default: 28, [breakpoints.upToCompact]: 24 },
-    paddingBottom: { default: 30, [breakpoints.upToCompact]: 24 },
-    paddingLeft: { default: 30, [breakpoints.upToMedium]: 20, [breakpoints.upToCompact]: 0 },
-    borderLeftWidth: { default: 1, [breakpoints.upToCompact]: 0 },
-    borderLeftStyle: "solid",
-    borderLeftColor: colors.border,
-    borderTopWidth: { default: 0, [breakpoints.upToCompact]: 1 },
-    borderTopStyle: "solid",
-    borderTopColor: colors.border,
-    minHeight: 620,
-  },
+  panel: { paddingTop: 20 },
   heading: { fontSize: { default: 28, [breakpoints.upToCompact]: 26 } },
-  intro: { marginTop: 0, color: colors.textMuted },
   fieldLabel: {
     display: "block",
     marginTop: "26px",
@@ -60,16 +48,9 @@ const styles = stylex.create({
     marginBottom: 9,
     fontSize: fontSizes.md,
   },
-  requirementNote: {
-    color: colors.textMuted,
-    fontSize: fontSizes.xs,
-    marginTop: "14px",
-    marginRight: "0",
-    marginBottom: "0",
-    marginLeft: "0",
-  },
   facts: {
     display: "flex",
+    flexWrap: "wrap",
     justifyContent: "space-between",
     gap: 12,
     color: colors.textMuted,
@@ -90,7 +71,7 @@ const styles = stylex.create({
     fontSize: fontSizes.sm,
     fontWeight: fontWeights.regular,
   },
-  actions: { display: "flex", gap: 10 },
+  actions: { display: "flex", flexWrap: "wrap", gap: 10 },
   amount: { width: 76 },
   action: { flexGrow: 1, flexShrink: 1, flexBasis: 0 },
   hint: {
@@ -157,15 +138,6 @@ const styles = stylex.create({
     fontWeight: fontWeights.regular,
   },
   rate: { fontSize: fontSizes.md, color: colors.textAccent },
-  note: {
-    color: colors.textMuted,
-    fontSize: fontSizes.sm,
-    lineHeight: 1.6,
-    marginTop: "12px",
-    marginRight: "0",
-    marginBottom: "20px",
-    marginLeft: "0",
-  },
   resolution: {
     backgroundColor: colors.surfaceSubtle,
     borderRadius: radii.sm,
@@ -206,6 +178,7 @@ export function CreationPanel({
   player: CharacterView;
   onCreated: (projectId: ProjectId) => void;
 }) {
+  const instanceId = useId();
   const [definitionId, setDefinitionId] = useState(
     () =>
       projects.find((entry) => !client.projects.checkCreation(entry.id, 1))?.id ??
@@ -217,8 +190,11 @@ export function CreationPanel({
   const definition = projects.find((entry) => entry.id === definitionId);
   if (!definition) {
     return (
-      <section {...stylex.props(styles.panel)} aria-labelledby="creation-heading">
-        <h2 {...stylex.props(typography.heading, styles.heading)} id="creation-heading">
+      <section {...stylex.props(styles.panel)} aria-labelledby={`creation-heading-${instanceId}`}>
+        <h2
+          {...stylex.props(typography.heading, styles.heading)}
+          id={`creation-heading-${instanceId}`}
+        >
           No project types available
         </h2>
       </section>
@@ -226,17 +202,18 @@ export function CreationPanel({
   }
   const error = client.projects.checkCreation(definitionId, amount);
   return (
-    <section {...stylex.props(styles.panel)} aria-labelledby="creation-heading">
-      <div {...stylex.props(typography.eyebrow)}>Your next step</div>
-      <h2 {...stylex.props(typography.heading, styles.heading)} id="creation-heading">
-        Put your name on it.
+    <section {...stylex.props(styles.panel)} aria-labelledby={`creation-heading-${instanceId}`}>
+      <h2
+        {...stylex.props(typography.heading, styles.heading)}
+        id={`creation-heading-${instanceId}`}
+      >
+        New project
       </h2>
-      <p {...stylex.props(styles.intro)}>Lead a project. Build the support to see it through.</p>
-      <label {...stylex.props(styles.fieldLabel)} htmlFor="project-type">
+      <label {...stylex.props(styles.fieldLabel)} htmlFor={`project-type-${instanceId}`}>
         Project
       </label>
       <Select
-        id="project-type"
+        id={`project-type-${instanceId}`}
         value={definitionId}
         onChange={(event) => setDefinitionId(event.target.value)}
       >
@@ -260,9 +237,6 @@ export function CreationPanel({
             {player.popularity} / {definition.requirements.popularity}
           </strong>
         </div>
-        <p {...stylex.props(styles.requirementNote)}>
-          Requirements unlock access. These resources are not spent.
-        </p>
       </div>
       <div {...stylex.props(styles.facts)}>
         <span>{definition.progressTarget} progress to succeed</span>
@@ -277,27 +251,27 @@ export function CreationPanel({
           if (projectId) onCreated(projectId);
         }}
       >
-        <label {...stylex.props(styles.label)} htmlFor="founding-influence">
+        <label {...stylex.props(styles.label)} htmlFor={`founding-influence-${instanceId}`}>
           Founding influence
         </label>
         <div {...stylex.props(styles.actions)}>
           <Input
             xstyle={styles.amount}
-            id="founding-influence"
+            id={`founding-influence-${instanceId}`}
             type="number"
             min={1}
             max={player.availableInfluence}
             step={1}
             value={amountInput}
             onChange={(event) => setAmountInput(event.target.value)}
-            aria-describedby="creation-hint"
+            aria-describedby={`creation-hint-${instanceId}`}
           />
           <Button xstyle={styles.action} type="submit" disabled={Boolean(error)}>
             Start project
           </Button>
         </div>
-        <p {...stylex.props(styles.hint)} id="creation-hint">
-          {error || "Your influence supports the project and returns when it resolves."}
+        <p {...stylex.props(styles.hint)} id={`creation-hint-${instanceId}`}>
+          {error || "Influence returns at resolution."}
         </p>
       </form>
     </section>
@@ -313,15 +287,15 @@ export function ProjectDetail({
   details: ProjectDetails;
   player: CharacterView;
 }) {
+  const instanceId = useId();
   const [amountInput, setAmountInput] = useState("1");
   const amount = Number(amountInput);
   const { project, definition, creator, ownCommitment: own } = details;
   const supportError = client.projects.checkCommitment(project.id, "support", amount);
   const opposeError = client.projects.checkCommitment(project.id, "oppose", amount);
-  let actionHint = "Choose a side. You can add influence, but cannot withdraw or switch sides.";
+  let actionHint = "Influence locked until resolution.";
   if (supportError && opposeError) actionHint = supportError;
-  if (player.availableInfluence === 0)
-    actionHint = "Your influence is committed. Advance days to resolve projects and recover it.";
+  if (player.availableInfluence === 0) actionHint = "No influence available.";
   let ownShare: ReactNode;
   if (own) {
     let share = "Share starts accruing next day";
@@ -344,7 +318,7 @@ export function ProjectDetail({
   if (project.status === "succeeded") status = "Succeeded";
   if (project.status === "failed") status = "Failed";
   return (
-    <section {...stylex.props(styles.panel)} aria-labelledby="project-heading">
+    <section {...stylex.props(styles.panel)} aria-labelledby={`project-heading-${instanceId}`}>
       <div {...stylex.props(styles.kicker)}>
         <span
           {...stylex.props(
@@ -357,7 +331,10 @@ export function ProjectDetail({
         </span>
         <span>Started {calendarDate(project.startedDay)}</span>
       </div>
-      <h2 {...stylex.props(typography.heading, styles.heading)} id="project-heading">
+      <h2
+        {...stylex.props(typography.heading, styles.heading)}
+        id={`project-heading-${instanceId}`}
+      >
         {definition.name}
       </h2>
       <p {...stylex.props(styles.byline)}>
@@ -389,21 +366,11 @@ export function ProjectDetail({
         </span>
         <span>Deadline {calendarDate(project.deadlineDay)}</span>
       </div>
-      {project.status === "active" && (
-        <p {...stylex.props(styles.note)}>
-          Net support changes progress each day. Reach {definition.progressTarget} by the deadline
-          to succeed.
-        </p>
-      )}
       <RewardTable definition={definition} />
-      <p {...stylex.props(styles.note)}>
-        Each side shares its pool by influence × days committed. The creator earns an additional
-        bonus.
-      </p>
       {ownShare}
       {project.status === "active" && (
         <div {...stylex.props(styles.form)}>
-          <label {...stylex.props(styles.label)} htmlFor="commit-influence">
+          <label {...stylex.props(styles.label)} htmlFor={`commit-influence-${instanceId}`}>
             Influence to commit{" "}
             <span {...stylex.props(styles.secondaryLabel)}>
               {player.availableInfluence} available
@@ -412,14 +379,14 @@ export function ProjectDetail({
           <div {...stylex.props(styles.actions)}>
             <Input
               xstyle={styles.amount}
-              id="commit-influence"
+              id={`commit-influence-${instanceId}`}
               type="number"
               min={1}
               max={player.availableInfluence}
               step={1}
               value={amountInput}
               onChange={(event) => setAmountInput(event.target.value)}
-              aria-describedby="commitment-hint"
+              aria-describedby={`commitment-hint-${instanceId}`}
             />
             <Button
               xstyle={styles.action}
@@ -437,7 +404,7 @@ export function ProjectDetail({
               Oppose
             </Button>
           </div>
-          <p {...stylex.props(styles.hint)} id="commitment-hint">
+          <p {...stylex.props(styles.hint)} id={`commitment-hint-${instanceId}`}>
             {actionHint}
           </p>
         </div>

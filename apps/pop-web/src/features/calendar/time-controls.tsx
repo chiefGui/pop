@@ -3,7 +3,7 @@ import { Button } from "../../ui/button";
 import { colors, fontSizes, fontWeights, breakpoints } from "../../ui/tokens.stylex";
 import { calendarDate } from "./calendar";
 
-export function TurnControl({ day, onAdvance }: { day: number; onAdvance: () => void }) {
+export function TimeControls({ day, onAdvance }: { day: number; onAdvance: () => void }) {
   return (
     <div {...stylex.props(styles.control)}>
       <div {...stylex.props(styles.date)}>
@@ -19,18 +19,23 @@ export function TurnControl({ day, onAdvance }: { day: number; onAdvance: () => 
 
 const styles = stylex.create({
   control: {
+    pointerEvents: "auto",
+    backgroundColor: colors.surface,
+    padding: 8,
     display: "flex",
-    flexDirection: { default: "row", [breakpoints.upToCompact]: "column" },
-    alignItems: { default: "center", [breakpoints.upToCompact]: "flex-end" },
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: { default: 24, [breakpoints.upToMedium]: 12, [breakpoints.upToCompact]: 8 },
   },
   date: {
     textAlign: "right",
-    display: { default: "block", [breakpoints.upToCompact]: "flex" },
-    gap: 8,
-    alignItems: "baseline",
   },
   label: { display: "block", fontSize: fontSizes.lg, fontWeight: fontWeights.semibold },
   day: { display: "block", fontSize: fontSizes.sm, color: colors.textMuted },
-  advance: { minWidth: { default: 136, [breakpoints.upToCompact]: 126 } },
+  advance: {
+    minWidth: { default: 136, [breakpoints.upToCompact]: 104 },
+    paddingInline: 12,
+    gap: 8,
+  },
 });

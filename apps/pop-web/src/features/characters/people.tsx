@@ -1,21 +1,27 @@
 import * as stylex from "@stylexjs/stylex";
 import { Table, TableHeading, TableCell } from "../../ui/table";
-import { typography } from "../../ui/typography";
+import { Button } from "../../ui/button";
 import { colors, fontSizes, radii } from "../../ui/tokens.stylex";
-import type { WorldView } from "@pop/simulation";
+import type { CharacterId, WorldView } from "@pop/simulation";
 
 const styles = stylex.create({
-  panel: { paddingBlock: "30px", paddingInline: "0" },
-  heading: { marginTop: 10 },
-  description: { color: colors.textMuted, fontSize: fontSizes.md, marginTop: 0 },
-  scroll: { maxHeight: 650, overflow: "auto", scrollbarGutter: "stable" },
+  panel: { minWidth: 0 },
+
+  scroll: { overflowX: "auto" },
   head: {
     position: "sticky",
     top: 0,
-    backgroundColor: colors.surfaceCanvas,
+    backgroundColor: colors.surface,
     color: colors.textMuted,
   },
   cell: { padding: 14 },
+  inspected: {
+    color: { default: colors.text, ":hover:not(:disabled)": colors.text },
+    backgroundColor: {
+      default: colors.surfaceSelected,
+      ":hover:not(:disabled)": colors.surfaceSelected,
+    },
+  },
   you: {
     fontSize: fontSizes.xs,
     color: colors.textAccent,
@@ -27,14 +33,17 @@ const styles = stylex.create({
   },
 });
 
-export function People({ world }: { world: WorldView }) {
+export function People({
+  world,
+  inspectedId,
+  onInspect,
+}: {
+  world: WorldView;
+  inspectedId: CharacterId;
+  onInspect: (id: CharacterId) => void;
+}) {
   return (
     <section {...stylex.props(styles.panel)}>
-      <div {...stylex.props(typography.eyebrow)}>The neighborhood</div>
-      <h2 {...stylex.props(typography.heading, styles.heading)}>People of {world.zone.name}</h2>
-      <p {...stylex.props(styles.description)}>
-        Everyone has their own resources. Everyone plays by the same rules.
-      </p>
       <div {...stylex.props(styles.scroll)}>
         <Table>
           <thead {...stylex.props(styles.head)}>
@@ -57,7 +66,14 @@ export function People({ world }: { world: WorldView }) {
             {world.characters.map((character) => (
               <tr key={character.id}>
                 <TableHeading xstyle={styles.cell} scope="row">
-                  {character.name}
+                  <Button
+                    variant="secondary"
+                    aria-pressed={character.id === inspectedId}
+                    xstyle={character.id === inspectedId && styles.inspected}
+                    onClick={() => onInspect(character.id)}
+                  >
+                    {character.name}
+                  </Button>
                   {character.isPlayer && <span {...stylex.props(styles.you)}>You</span>}
                 </TableHeading>
                 <TableCell xstyle={styles.cell}>{character.reputation}</TableCell>

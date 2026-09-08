@@ -37,11 +37,13 @@ const styles = stylex.create({
   },
   primary: {
     color: colors.textOnAction,
-    backgroundColor: { default: colors.action, ":hover:not(:disabled)": colors.actionHover },
+    backgroundColor: {
+      default: colors.surfaceAction,
+      ":hover:not(:disabled)": colors.surfaceActionHover,
+    },
   },
   secondary: {
-    color: colors.action,
-    borderColor: colors.borderControl,
+    color: { default: colors.textMuted, ":hover:not(:disabled)": colors.text },
     backgroundColor: { default: "transparent", ":hover:not(:disabled)": colors.surfaceHover },
   },
 });
