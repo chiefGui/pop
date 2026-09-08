@@ -2,7 +2,7 @@ import { Context, Effect, Layer, Result, Schema, Scope } from "effect";
 import { Session } from "@pop/engine";
 import type { InvalidBehaviors, SessionError } from "@pop/engine";
 import { ProjectAction, createProjects } from "#game/projects";
-import { populateCharacters } from "#game/characters";
+import { generateNpc } from "#game/npc";
 import { NpcPolicy, observeDecisions } from "#game/ai";
 import type { NpcDecision } from "#game/ai";
 import { createTurns } from "#game/turns";
@@ -45,14 +45,28 @@ export class Simulation extends Context.Service<
         Effect.sync(() => createWorldState(content.world.zone)),
         (world) => Effect.sync(() => world.dispose()),
       ).pipe(Effect.provideService(Scope.Scope, session.scope));
-      const playerId = populateCharacters(
-        world.characters,
-        content.world,
-        world.zoneId,
-        options,
-        random.world,
-        random.names,
-      );
+      const playerId = "character:0";
+      world.characters.add({
+        id: playerId,
+        ...options.player,
+        zoneId: world.zoneId,
+        reputation: 0,
+        popularity: 0,
+        influence: 1,
+      });
+      const npcGeneration = {
+        names: content.world,
+        zoneId: world.zoneId,
+        settings: options.generation,
+        random: {
+          standing: random.world,
+          names: random.names,
+          birthdays: random.birthdays,
+        },
+      };
+      for (let index = 1; index <= options.generation.npcCount; index += 1) {
+        world.characters.add(generateNpc(`character:${index}`, npcGeneration));
+      }
       const projects = yield* Effect.acquireRelease(
         Effect.sync(() => createProjects(world, content.projects)),
         (projects) => Effect.sync(() => projects.dispose()),

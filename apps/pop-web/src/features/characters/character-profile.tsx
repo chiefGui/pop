@@ -4,6 +4,7 @@ import { Button } from "../../ui/button";
 import { FeaturePanel } from "../../ui/shell/feature-panel";
 import { colors, fontSizes, fontWeights } from "../../ui/tokens.stylex";
 import { CharacterPortrait } from "./character-portrait";
+import { formatCalendarDate } from "../calendar/calendar";
 
 export function CharacterProfile({
   character,
@@ -19,7 +20,7 @@ export function CharacterProfile({
   return (
     <FeaturePanel
       id="character"
-      label={character.name}
+      label={character.displayName}
       open={open}
       onClose={onClose}
       placement="left"
@@ -33,6 +34,14 @@ export function CharacterProfile({
         </Button>
       )}
       <dl {...stylex.props(styles.resources)}>
+        <div {...stylex.props(styles.resource)}>
+          <dt {...stylex.props(styles.label)}>Age</dt>
+          <dd>{character.age}</dd>
+        </div>
+        <div {...stylex.props(styles.resource)}>
+          <dt {...stylex.props(styles.label)}>Born</dt>
+          <dd>{formatCalendarDate(character.birthDate)}</dd>
+        </div>
         <div {...stylex.props(styles.resource)}>
           <dt {...stylex.props(styles.label)}>Reputation</dt>
           <dd>{character.reputation}</dd>

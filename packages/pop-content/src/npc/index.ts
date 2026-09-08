@@ -1,0 +1,1 @@
+export { npcNames } from "./names";

@@ -72,7 +72,7 @@ export function People({
                     xstyle={character.id === inspectedId && styles.inspected}
                     onClick={() => onInspect(character.id)}
                   >
-                    {character.name}
+                    {character.displayName}
                   </Button>
                   {character.isPlayer && <span {...stylex.props(styles.you)}>You</span>}
                 </TableHeading>

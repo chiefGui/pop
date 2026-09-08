@@ -35,6 +35,13 @@ test("the configured opening takes a nobody from contribution to creating and re
       const final = yield* simulation.getView;
       expect(final.projects.find((project) => project.id === own.id)!.status).toBe("succeeded");
       expect(final.characters[0]!.availableInfluence).toBe(1);
-    }).pipe(Effect.provide(simulationLayer(gameContent, { ...gameSetup, playerName: "Newcomer" }))),
+    }).pipe(
+      Effect.provide(
+        simulationLayer(gameContent, {
+          ...gameSetup,
+          player: { givenName: "Newcomer", familyName: "Vale", birthDate: "1990-01-02" },
+        }),
+      ),
+    ),
   );
 });

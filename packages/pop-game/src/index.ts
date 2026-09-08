@@ -10,3 +10,4 @@ export { SimulationRandom } from "#game/random";
 export { InvalidContent } from "#game/catalog";
 export { InvalidSessionOptions } from "#game/sessions";
 export { checkProjectAction, ProjectAction } from "#game/projects";
+export { gameStartDate, dateAtDay } from "#game/calendar";

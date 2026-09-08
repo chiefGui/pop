@@ -1,5 +1,7 @@
-export { CharacterId, GenerationSettings } from "#game/characters";
-export type { CharacterView, CharacterNames } from "#game/characters";
+export { CharacterId, CharacterIdentity } from "#game/characters";
+export type { CharacterView } from "#game/characters";
+export { NpcGenerationSettings } from "#game/npc";
+export type { NpcNames } from "#game/npc";
 export { ZoneId } from "#game/zones";
 export type { Zone } from "#game/zones";
 export {
