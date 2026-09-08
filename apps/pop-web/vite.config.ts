@@ -7,6 +7,7 @@ import { defineConfig } from "vite-plus";
 export default defineConfig({
   root: fileURLToPath(new URL(".", import.meta.url)),
   base: "./",
+  assetsInclude: ["**/*.glb"],
   plugins: [
     tailwindcss(),
     stylex(),

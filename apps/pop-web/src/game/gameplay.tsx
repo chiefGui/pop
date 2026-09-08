@@ -8,6 +8,7 @@ import { FeatureStrip } from "../ui/shell/feature-strip";
 import { Button } from "../ui/button";
 import { Feedback } from "../ui/feedback";
 import { WorldViewport } from "../features/world/world-viewport";
+import { CityMap } from "../features/world/city-map";
 import { CharacterTrigger } from "../features/characters/character-trigger";
 import { CharacterProfile } from "../features/characters/character-profile";
 import { People } from "../features/characters/people";
@@ -86,7 +87,9 @@ export function Gameplay({
   ] as const;
   return (
     <>
-      <WorldViewport location={world.zone.name} />
+      <WorldViewport location={world.zone.name}>
+        <CityMap />
+      </WorldViewport>
       <AppShell>
         <Header>
           <h1>{world.zone.name}</h1>

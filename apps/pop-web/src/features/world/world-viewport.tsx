@@ -1,8 +1,13 @@
 import * as stylex from "@stylexjs/stylex";
+import type { ReactNode } from "react";
 import { colors } from "../../ui/tokens.stylex";
 
-export function WorldViewport({ location }: { location: string }) {
-  return <main aria-label={location} {...stylex.props(styles.viewport)} />;
+export function WorldViewport({ location, children }: { location: string; children: ReactNode }) {
+  return (
+    <main aria-label={location} {...stylex.props(styles.viewport)}>
+      {children}
+    </main>
+  );
 }
 
 const styles = stylex.create({
